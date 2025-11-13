@@ -4,6 +4,8 @@
 #include <cmath>
 using namespace std;
 
+#define GRID_SIZE 40
+
 // ========== Coordinate ==========
 struct Coordinate {
     int x, y;
@@ -12,7 +14,10 @@ struct Coordinate {
 // ========== Path Node (Linked List) ==========
 struct PathNode {
     Coordinate pos;
-    PathNode* next;
+    PathNode* front;
+    PathNode* left;
+    PathNode* right;
+    PathNode(Coordinate p) : pos(p), front(nullptr), left(nullptr), right(nullptr) {}
 };
 
 // ========== Enemy ==========
@@ -24,18 +29,28 @@ public:
     Enemy(int hp, int spd, PathNode* start) : health(hp), speed(spd), current(start) {
         shape.setRadius(10);
         shape.setFillColor(sf::Color::Red);
-        shape.setPosition(start->pos.x * 40, start->pos.y * 40);
+        shape.setPosition(start->pos.x * GRID_SIZE, start->pos.y * GRID_SIZE);
     }
 
     void move() {
-        if (current && current->next) {
-            current = current->next;
-            shape.setPosition(current->pos.x * 40, current->pos.y * 40);
+        if (current && current->front) {
+            current = current->front;
+            shape.setPosition(current->pos.x * GRID_SIZE, current->pos.y * GRID_SIZE);
         }
+        else if (current&& current->left) {
+			current = current->left;
+			shape.setPosition(current->pos.x * GRID_SIZE, current->pos.y * GRID_SIZE);
+		}
+		else if (current && current->right) {
+			current = current->right;
+			shape.setPosition(current->pos.x * GRID_SIZE, current->pos.y * GRID_SIZE);
+        }
+        // You can add logic here to choose left/right at branches
     }
 
     void draw(sf::RenderWindow& window) { window.draw(shape); }
 };
+
 
 // ========== Tower ==========
 class Tower {
@@ -48,7 +63,7 @@ public:
         range = rng;
         shape.setRadius(15);
         shape.setFillColor(sf::Color::Blue);
-        shape.setPosition(x * 40, y * 40);
+        shape.setPosition(x * GRID_SIZE, y * GRID_SIZE);
     }
 
     void draw(sf::RenderWindow& window) { window.draw(shape); }
@@ -62,17 +77,31 @@ class Map {
 public:
     Map(int r, int c) : rows(r), cols(c) {
         grid.assign(rows, vector<int>(cols, 0));
-        // Manually mark a simple path
-        for (int i = 0; i < cols; i++) grid[5][i] = 1; // Horizontal path
+        // Manually mark the path based on your image
+        grid = {
+            {1, 1, 2, 2, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+            {1, 1, 2, 2, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+            {0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1},
+            {0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1},
+			{1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1},
+			{1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1},
+            {1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 2, 2, 1, 1},
+            {1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 2, 2, 1, 1},
+            {1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1},
+            {1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1},
+            {1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1},
+            {1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1},
+            {1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1},
+            {1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1},
+        };
 
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < cols; j++) {
-                sf::RectangleShape rect(sf::Vector2f(40, 40));
-                rect.setPosition(j * 40, i * 40);
-                if (grid[i][j] == 1) rect.setFillColor(sf::Color(150, 75, 0)); // path
+                sf::RectangleShape rect(sf::Vector2f(GRID_SIZE, GRID_SIZE));
+                rect.setPosition(j * GRID_SIZE, i * GRID_SIZE);
+                if (grid[i][j] == 0) rect.setFillColor(sf::Color(150, 150, 150)); // path
+				else if (grid[i][j] == 2) rect.setFillColor(sf::Color(0, 0, 0)); // special path
                 else rect.setFillColor(sf::Color(0, 200, 0)); // grass
-                rect.setOutlineThickness(1);
-                rect.setOutlineColor(sf::Color::Black);
                 tiles.push_back(rect);
             }
         }
@@ -82,8 +111,116 @@ public:
         for (auto& t : tiles) window.draw(t);
     }
 
-    bool isBuildable(int x, int y) { return grid[y][x] == 0; }
+    bool isBuildable(int x, int y) {
+        if (x < 0 || x >= cols || y < 0 || y >= rows) return false;
+        return grid[y][x] == 1;
+    }
+
+    bool isPath(int x, int y) {
+        if (x < 0 || x >= cols || y < 0 || y >= rows) return false;
+        return grid[y][x] == 0;
+    }
 };
+
+void buildPathNetwork(PathNode* start, string movement, Map* gameMap) {
+    // Implement path network building logic here if needed
+	if (movement == "UP") {
+        if (gameMap->isPath(start->pos.x, start->pos.y - 2)) {
+            PathNode* next = new PathNode({ start->pos.x, start->pos.y - 1 });
+            start->front = next;
+            PathNode* next2 = new PathNode({ start->pos.x, start->pos.y - 2 });
+            next->front = next2;
+            buildPathNetwork(next2, movement, gameMap);
+        }
+        if (gameMap->isPath(start->pos.x -2, start->pos.y)) {
+            PathNode* next = new PathNode({ start->pos.x - 1, start->pos.y });
+            start->left = next;
+            PathNode* next2 = new PathNode({ start->pos.x -2, start->pos.y});
+            next->front = next2;
+            buildPathNetwork(next2, "LEFT", gameMap);
+        }
+        if (gameMap->isPath(start->pos.x + 2, start->pos.y) && 
+            (start->pos.x != 3 || start->pos.y != 4) && 
+            (start->pos.x != 9 || start->pos.y != 8)) {
+            PathNode* next = new PathNode({ start->pos.x + 1, start->pos.y });
+            start->right = next;
+            PathNode* next2 = new PathNode({ start->pos.x + 2, start->pos.y });
+            next->front = next2;
+            buildPathNetwork(next2, "RIGHT", gameMap);
+        }
+    }
+    if (movement == "LEFT") {
+        if (gameMap->isPath(start->pos.x, start->pos.y - 2)) {
+            PathNode* next = new PathNode({ start->pos.x, start->pos.y - 1 });
+            start->right = next;
+            PathNode* next2 = new PathNode({ start->pos.x, start->pos.y - 2 });
+            next->front = next2;
+            buildPathNetwork(next2, "UP", gameMap);
+        }
+        if (gameMap->isPath(start->pos.x - 2, start->pos.y)) {
+            PathNode* next = new PathNode({ start->pos.x - 1, start->pos.y });
+            start->front = next;
+            PathNode* next2 = new PathNode({ start->pos.x - 2, start->pos.y });
+            next->front = next2;
+            buildPathNetwork(next2, movement, gameMap);
+        }
+        if (gameMap->isPath(start->pos.x, start->pos.y + 2) && 
+            (start->pos.x != 3 || start->pos.y != 4) &&
+            (start->pos.x != 9 || start->pos.y != 8)) {
+            PathNode* next = new PathNode({ start->pos.x, start->pos.y + 1});
+            start->left = next;
+            PathNode* next2 = new PathNode({ start->pos.x, start->pos.y + 2});
+            next->front = next2;
+            buildPathNetwork(next2, "DOWN", gameMap);
+        }
+    }
+    if (movement == "RIGHT") {
+        if (gameMap->isPath(start->pos.x, start->pos.y - 2)) {
+            PathNode* next = new PathNode({ start->pos.x, start->pos.y - 1 });
+            start->left = next;
+            PathNode* next2 = new PathNode({ start->pos.x, start->pos.y - 2 });
+            next->front = next2;
+            buildPathNetwork(next2, "UP", gameMap);
+        }
+        if (gameMap->isPath(start->pos.x, start->pos.y + 2)) {
+            PathNode* next = new PathNode({ start->pos.x, start->pos.y + 1 });
+            start->right = next;
+            PathNode* next2 = new PathNode({ start->pos.x, start->pos.y + 2 });
+            next->front = next2;
+            buildPathNetwork(next2, "DOWN", gameMap);
+        }
+        if (gameMap->isPath(start->pos.x + 2, start->pos.y)) {
+            PathNode* next = new PathNode({ start->pos.x + 1, start->pos.y });
+            start->front = next;
+            PathNode* next2 = new PathNode({ start->pos.x + 2, start->pos.y });
+            next->front = next2;
+            buildPathNetwork(next2, movement, gameMap);
+        }
+    }
+    if (movement == "DOWN") {
+        if (gameMap->isPath(start->pos.x, start->pos.y + 2)) {
+            PathNode* next = new PathNode({ start->pos.x, start->pos.y + 1 });
+            start->front = next;
+            PathNode* next2 = new PathNode({ start->pos.x, start->pos.y + 2 });
+            next->front = next2;
+            buildPathNetwork(next2, movement, gameMap);
+        }
+        if (gameMap->isPath(start->pos.x - 2, start->pos.y)) {
+            PathNode* next = new PathNode({ start->pos.x - 1, start->pos.y });
+            start->right = next;
+            PathNode* next2 = new PathNode({ start->pos.x - 2, start->pos.y });
+            next->front = next2;
+            buildPathNetwork(next2, "LEFT", gameMap);
+        }
+        if (gameMap->isPath(start->pos.x + 2, start->pos.y)) {
+            PathNode* next = new PathNode({ start->pos.x + 1, start->pos.y });
+            start->left = next;
+            PathNode* next2 = new PathNode({ start->pos.x + 2, start->pos.y });
+            next->front = next2;
+            buildPathNetwork(next2, "RIGHT", gameMap);
+        }
+    }
+}
 
 // ========== Game Manager ==========
 class GameManager {
@@ -95,16 +232,16 @@ class GameManager {
     float enemyMoveTimer;
 public:
     GameManager() {
-        gameMap = new Map(10, 15);
+        gameMap = new Map(14, 26);
         enemyMoveTimer = 0;
 
-        // Create simple path (linked list)
-        pathHead = new PathNode{ {0, 5}, nullptr };
-        PathNode* cur = pathHead;
-        for (int i = 1; i < 15; i++) {
-            cur->next = new PathNode{ {i, 5}, nullptr };
-            cur = cur->next;
-        }
+        // Build the path network
+        PathNode* start = new PathNode({ 21,13 });
+		PathNode* second = new PathNode({ 21,12 });
+		start->front = second;
+		buildPathNetwork(second, "UP", gameMap);
+
+        pathHead = start;
 
         // Spawn one enemy
         enemies.push_back(new Enemy(100, 1, pathHead));
@@ -123,14 +260,14 @@ public:
 
     void draw(sf::RenderWindow& window) {
         gameMap->draw(window);
-        for (auto& t : towers) t->draw(window);
+        /* for (auto& t : towers) t->draw(window);*/
         for (auto& e : enemies) e->draw(window);
     }
 };
 
 // ========== MAIN ==========
 int main() {
-    sf::RenderWindow window(sf::VideoMode(600, 400), "Tower Defense - SFML Demo");
+    sf::RenderWindow window(sf::VideoMode(26 * GRID_SIZE, 14 * GRID_SIZE), "Tower Defense - SFML Demo");
     window.setFramerateLimit(60);
 
     GameManager game;

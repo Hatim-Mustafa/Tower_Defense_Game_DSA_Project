@@ -73,7 +73,7 @@ struct UpgradeNode {
 
 class Tower {
 public:
-    sf::Vector2i pos;
+    Vector2i pos;
     int damage;
     int range;
     float fireRate;
@@ -85,10 +85,10 @@ public:
     sf::CircleShape shape;
     sf::CircleShape rangeCircle;
 
-    Tower(sf::Vector2f coord) {
-        pos = sf::Vector2i(round(coord.x / GRID_SIZE), round(coord.y / GRID_SIZE));
+    Tower(Vector2i coord) {
+        pos = Vector2i(coord.x, coord.y);;
         damage = 10;
-        range = 2 * GRID_SIZE;
+        range = 4 * GRID_SIZE;
         fireRate = 1.0f;
         points = 150;
 
@@ -361,7 +361,16 @@ public:
     void checkShopDrag(sf::Vector2f coord, bool clicked) {
         if (shop.isDragging && !clicked) {
             shop.isDragging = false;
-            towers.push_back(new Tower(dragTower.getPosition()));
+            Vector2f coord = dragTower.getPosition();
+            Vector2i pos = Vector2i(round(coord.x / GRID_SIZE), round(coord.y / GRID_SIZE));
+            if (gameMap->isBuildable(pos.x, pos.y)) {
+                for (auto& t : towers) {
+                    if (t->pos == pos) {
+                        return; // Can't build on another tower
+                    }
+                }
+                towers.push_back(new Tower(pos));
+            }
         }
         if (shop.shopTower.getGlobalBounds().contains(coord))
         {

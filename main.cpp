@@ -38,13 +38,13 @@ public:
             current = current->front;
             shape.setPosition(current->pos.x * GRID_SIZE, current->pos.y * GRID_SIZE);
         }
-        else if (current&& current->left) {
-			current = current->left;
-			shape.setPosition(current->pos.x * GRID_SIZE, current->pos.y * GRID_SIZE);
-		}
-		else if (current && current->right) {
-			current = current->right;
-			shape.setPosition(current->pos.x * GRID_SIZE, current->pos.y * GRID_SIZE);
+        else if (current && current->left) {
+            current = current->left;
+            shape.setPosition(current->pos.x * GRID_SIZE, current->pos.y * GRID_SIZE);
+        }
+        else if (current && current->right) {
+            current = current->right;
+            shape.setPosition(current->pos.x * GRID_SIZE, current->pos.y * GRID_SIZE);
         }
         // You can add logic here to choose left/right at branches
     }
@@ -54,33 +54,124 @@ public:
 
 
 // ========== Tower ==========
+
+struct UpgradeNode {
+    string name;
+    int cost;
+    int damageBoost;
+    int rangeBoost;
+    float fireRateBoost;
+
+    UpgradeNode* left;
+    UpgradeNode* right;
+
+    UpgradeNode(string n, int c, int dmg, int rng, float rate)
+        : name(n), cost(c), damageBoost(dmg), rangeBoost(rng),
+        fireRateBoost(rate), left(nullptr), right(nullptr) {
+    }
+};
+
 class Tower {
-    Vector2i pos;
-    int range;
-    sf::CircleShape shape;
 public:
-    Tower(Vector2f coord) {
-        pos = Vector2i(round(coord.x/GRID_SIZE), round(coord.y/GRID_SIZE));
+    sf::Vector2i pos;
+    int damage;
+    int range;
+    float fireRate;
+    int points;
+
+    UpgradeNode* root;
+    UpgradeNode* current;
+
+    sf::CircleShape shape;
+    sf::CircleShape rangeCircle;
+
+    Tower(sf::Vector2f coord) {
+        pos = sf::Vector2i(round(coord.x / GRID_SIZE), round(coord.y / GRID_SIZE));
+        damage = 10;
         range = 2 * GRID_SIZE;
-        shape.setRadius(GRID_SIZE/2);
+        fireRate = 1.0f;
+        points = 150;
+
+        shape.setRadius(GRID_SIZE / 2);
         shape.setFillColor(sf::Color::Blue);
         shape.setPosition(pos.x * GRID_SIZE, pos.y * GRID_SIZE);
+
+        rangeCircle.setRadius(range);
+        rangeCircle.setOrigin(range, range);
+        rangeCircle.setFillColor(sf::Color(0, 0, 255, 50));
+        rangeCircle.setPosition(pos.x * GRID_SIZE + GRID_SIZE / 2, pos.y * GRID_SIZE + GRID_SIZE / 2);
+
+        buildUpgradeTree();
+        current = root;
     }
 
+    void buildUpgradeTree() {
+        root = new UpgradeNode("Base Tower", 0, 10, 0, 0.0f);
+
+        // First tier
+        root->left = new UpgradeNode("Wizard Tower", 50, 15, 50, 0.2f);
+        root->right = new UpgradeNode("Ice Tower", 50, 8, 20, 0.3f);
+
+        // Wizard Tower upgrades
+        root->left->left = new UpgradeNode("Arcane Explosion", 100, 25, 20, 0.15f);
+        root->left->right = new UpgradeNode("Cannon Tower", 100, 30, 40, 0.2f);
+
+        // Cannon Tower upgrades
+        root->left->right->left = new UpgradeNode("Heavy Shot", 150, 50, 30, 0.25f);
+        root->left->right->right = new UpgradeNode("Explosive Shell", 150, 45, 50, 0.2f);
+
+        // Lightning Chain upgrade remains for Wizard
+        root->left->left->left = new UpgradeNode("Lightning Chain", 150, 20, 30, 0.1f);
+
+        // Ice Tower upgrades
+        root->right->left = new UpgradeNode("Deep Freeze", 100, 5, 25, 0.1f);
+        root->right->right = new UpgradeNode("Shatter", 100, 10, 15, 0.1f);
+    }
+
+
+    bool upgrade(UpgradeNode* targetNode) {
+        if ((current->left == targetNode || current->right == targetNode) && points >= targetNode->cost) {
+            damage += targetNode->damageBoost;
+            range += targetNode->rangeBoost;
+            fireRate -= targetNode->fireRateBoost;
+
+            rangeCircle.setRadius(range);
+            rangeCircle.setOrigin(range, range);
+
+            points -= targetNode->cost;
+            current = targetNode;
+
+            cout << "Upgraded to " << current->name << endl;
+            return true;
+        }
+        return false;
+    }
+
+    int getAvailableUpgrades(UpgradeNode* options[2]) {
+        int count = 0;
+        if (current->left) options[count++] = current->left;
+        if (current->right) options[count++] = current->right;
+        return count;
+    }
+
+    bool isClicked(sf::Vector2f mousePos) {
+        return shape.getGlobalBounds().contains(mousePos);
+    }
     void draw(sf::RenderWindow& window) { window.draw(shape); }
 };
 
+
 class Shop {
-    public:
-	sf::RectangleShape shopTower;
+public:
+    sf::RectangleShape shopTower;
     bool isDragging;
-	Shop() {
-		shopTower.setSize(sf::Vector2f(GRID_SIZE*2, GRID_SIZE * 2));
-		shopTower.setFillColor(sf::Color::Red);
-		shopTower.setPosition(26 * GRID_SIZE, 0);  // shop location
+    Shop() {
+        shopTower.setSize(sf::Vector2f(GRID_SIZE * 2, GRID_SIZE * 2));
+        shopTower.setFillColor(sf::Color::Red);
+        shopTower.setPosition(26 * GRID_SIZE, 0);  // shop location
         isDragging = false;
-	}
-	void draw(sf::RenderWindow& window) { window.draw(shopTower); }
+    }
+    void draw(sf::RenderWindow& window) { window.draw(shopTower); }
 };
 
 // ========== Map ==========
@@ -97,8 +188,8 @@ public:
             {1, 1, 2, 2, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
             {0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1},
             {0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1},
-			{1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1},
-			{1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1},
+            {1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1},
+            {1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1},
             {1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 2, 2, 1, 1},
             {1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 2, 2, 1, 1},
             {1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1},
@@ -114,7 +205,7 @@ public:
                 sf::RectangleShape rect(sf::Vector2f(GRID_SIZE, GRID_SIZE));
                 rect.setPosition(j * GRID_SIZE, i * GRID_SIZE);
                 if (grid[i][j] == 0) rect.setFillColor(sf::Color(150, 150, 150)); // path
-				else if (grid[i][j] == 2) rect.setFillColor(sf::Color(0, 0, 0)); // special path
+                else if (grid[i][j] == 2) rect.setFillColor(sf::Color(0, 0, 0)); // special path
                 else rect.setFillColor(sf::Color(0, 200, 0)); // grass
                 tiles.push_back(rect);
             }
@@ -138,7 +229,7 @@ public:
 
 void buildPathNetwork(PathNode* start, string movement, Map* gameMap) {
     // Implement path network building logic here if needed
-	if (movement == "UP") {
+    if (movement == "UP") {
         if (gameMap->isPath(start->pos.x, start->pos.y - 2)) {
             PathNode* next = new PathNode({ start->pos.x, start->pos.y - 1 });
             start->front = next;
@@ -146,15 +237,15 @@ void buildPathNetwork(PathNode* start, string movement, Map* gameMap) {
             next->front = next2;
             buildPathNetwork(next2, movement, gameMap);
         }
-        if (gameMap->isPath(start->pos.x -2, start->pos.y)) {
+        if (gameMap->isPath(start->pos.x - 2, start->pos.y)) {
             PathNode* next = new PathNode({ start->pos.x - 1, start->pos.y });
             start->left = next;
-            PathNode* next2 = new PathNode({ start->pos.x -2, start->pos.y});
+            PathNode* next2 = new PathNode({ start->pos.x - 2, start->pos.y });
             next->front = next2;
             buildPathNetwork(next2, "LEFT", gameMap);
         }
-        if (gameMap->isPath(start->pos.x + 2, start->pos.y) && 
-            (start->pos.x != 3 || start->pos.y != 4) && 
+        if (gameMap->isPath(start->pos.x + 2, start->pos.y) &&
+            (start->pos.x != 3 || start->pos.y != 4) &&
             (start->pos.x != 9 || start->pos.y != 8)) {
             PathNode* next = new PathNode({ start->pos.x + 1, start->pos.y });
             start->right = next;
@@ -178,12 +269,12 @@ void buildPathNetwork(PathNode* start, string movement, Map* gameMap) {
             next->front = next2;
             buildPathNetwork(next2, movement, gameMap);
         }
-        if (gameMap->isPath(start->pos.x, start->pos.y + 2) && 
+        if (gameMap->isPath(start->pos.x, start->pos.y + 2) &&
             (start->pos.x != 3 || start->pos.y != 4) &&
             (start->pos.x != 9 || start->pos.y != 8)) {
-            PathNode* next = new PathNode({ start->pos.x, start->pos.y + 1});
+            PathNode* next = new PathNode({ start->pos.x, start->pos.y + 1 });
             start->left = next;
-            PathNode* next2 = new PathNode({ start->pos.x, start->pos.y + 2});
+            PathNode* next2 = new PathNode({ start->pos.x, start->pos.y + 2 });
             next->front = next2;
             buildPathNetwork(next2, "DOWN", gameMap);
         }
@@ -239,8 +330,8 @@ void buildPathNetwork(PathNode* start, string movement, Map* gameMap) {
 // ========== Game Manager ==========
 class GameManager {
     Map* gameMap;
-	Shop shop;
-	RectangleShape dragTower;
+    Shop shop;
+    RectangleShape dragTower;
     vector<Tower*> towers;
     vector<Enemy*> enemies;
     PathNode* pathHead;
@@ -253,9 +344,9 @@ public:
 
         // Build the path network
         PathNode* start = new PathNode({ 21,13 });
-		PathNode* second = new PathNode({ 21,12 });
-		start->front = second;
-		buildPathNetwork(second, "UP", gameMap);
+        PathNode* second = new PathNode({ 21,12 });
+        start->front = second;
+        buildPathNetwork(second, "UP", gameMap);
 
         pathHead = start;
 
@@ -272,10 +363,10 @@ public:
             shop.isDragging = false;
             towers.push_back(new Tower(dragTower.getPosition()));
         }
-		if (shop.shopTower.getGlobalBounds().contains(coord))
-		{
+        if (shop.shopTower.getGlobalBounds().contains(coord))
+        {
             shop.isDragging = true;
-		}
+        }
     }
 
     void update(Vector2f mousePos) {
@@ -294,11 +385,11 @@ public:
 
     void draw(sf::RenderWindow& window) {
         gameMap->draw(window);
-		shop.draw(window);
+        shop.draw(window);
         for (auto& t : towers) t->draw(window);
         for (auto& e : enemies) e->draw(window);
         if (shop.isDragging) {
-			window.draw(dragTower);
+            window.draw(dragTower);
         }
     }
 };
@@ -326,8 +417,8 @@ int main() {
             // Mouse release: drop tower
             if (event.type == sf::Event::MouseButtonReleased &&
                 event.mouseButton.button == sf::Mouse::Left)
-            {       
-				game.checkShopDrag({0,0}, false);
+            {
+                game.checkShopDrag({ 0,0 }, false);
             }
         }
 

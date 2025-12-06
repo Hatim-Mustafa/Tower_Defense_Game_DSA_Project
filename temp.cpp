@@ -49,7 +49,10 @@ public:
         // You can add logic here to choose left/right at branches
     }
 
-    void draw(sf::RenderWindow& window) { window.draw(shape); }
+    void draw(sf::RenderWindow& window) {
+        window.draw(shape);
+
+    }
 };
 
 
@@ -78,7 +81,7 @@ public:
     int range;
     float fireRate;
     int points;
-
+    bool isSelected = false;
     UpgradeNode* root;
     UpgradeNode* current;
 
@@ -157,7 +160,37 @@ public:
     bool isClicked(sf::Vector2f mousePos) {
         return shape.getGlobalBounds().contains(mousePos);
     }
-    void draw(sf::RenderWindow& window) { window.draw(shape); }
+    void draw(sf::RenderWindow& window) {
+        window.draw(shape);
+
+        if (isSelected) {
+            window.draw(rangeCircle); // draw tower range
+
+            // Draw upgrade buttons
+            UpgradeNode* options[2];
+            int n = getAvailableUpgrades(options);
+
+            for (int i = 0; i < n; i++) {
+                sf::RectangleShape btn(sf::Vector2f(100, 30));
+                btn.setPosition(pos.x * GRID_SIZE, pos.y * GRID_SIZE + GRID_SIZE + i * 35);
+                btn.setFillColor(sf::Color(100, 100, 250));
+
+                sf::Font font;
+                font.loadFromFile("arial.ttf"); // make sure you have a font file
+                sf::Text txt;
+                txt.setFont(font);
+                txt.setString(options[i]->name + "\nCost: " + to_string(options[i]->cost));
+                txt.setCharacterSize(14);
+                txt.setFillColor(sf::Color::White);
+                txt.setPosition(btn.getPosition().x + 5, btn.getPosition().y + 5);
+
+                window.draw(btn);
+                window.draw(txt);
+            }
+        }
+    }
+
+
 };
 
 
@@ -392,6 +425,34 @@ public:
             window.draw(dragTower);
         }
     }
+    void checkTowerClick(sf::Vector2f mousePos) {
+        for (auto& t : towers) t->isSelected = false; // deselect all first
+
+        for (auto& t : towers) {
+            if (t->shape.getGlobalBounds().contains(mousePos)) {
+                t->isSelected = true;
+                break;
+            }
+        }
+    }
+
+    void checkUpgradeClick(sf::Vector2f mousePos) {
+        for (auto& t : towers) {
+            if (t->isSelected) {
+                UpgradeNode* options[2];
+                int n = t->getAvailableUpgrades(options);
+
+                for (int i = 0; i < n; i++) {
+                    FloatRect btnRect(t->pos.x * GRID_SIZE, t->pos.y * GRID_SIZE + GRID_SIZE + i * 35, 100, 30);
+                    if (btnRect.contains(mousePos)) {
+                        t->upgrade(options[i]);
+                    }
+                }
+            }
+        }
+    }
+
+
 };
 
 // ========== MAIN ==========
@@ -408,11 +469,10 @@ int main() {
                 window.close();
 
             //Mouse press: begin drag if clicked on the shop item
-            if (event.type == sf::Event::MouseButtonPressed &&
-                event.mouseButton.button == sf::Mouse::Left)
-            {
-                game.checkShopDrag(window.mapPixelToCoords(sf::Mouse::getPosition(window)), true);
-            }
+            sf::Vector2f mousePos = window.mapPixelToCoords(sf::Mouse::getPosition(window));
+            game.checkShopDrag(mousePos, true);
+            game.checkTowerClick(mousePos);
+            game.checkUpgradeClick(mousePos);
 
             // Mouse release: drop tower
             if (event.type == sf::Event::MouseButtonReleased &&

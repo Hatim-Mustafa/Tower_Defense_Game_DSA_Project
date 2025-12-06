@@ -3,6 +3,7 @@
 #include <vector>
 #include <cmath>
 using namespace std;
+using namespace sf;
 
 #define GRID_SIZE 40
 
@@ -54,19 +55,32 @@ public:
 
 // ========== Tower ==========
 class Tower {
-    Coordinate pos;
+    Vector2i pos;
     int range;
     sf::CircleShape shape;
 public:
-    Tower(int x, int y, int rng) {
-        pos = { x, y };
-        range = rng;
-        shape.setRadius(15);
+    Tower(Vector2f coord) {
+        pos = Vector2i(round(coord.x/GRID_SIZE), round(coord.y/GRID_SIZE));
+        range = 2 * GRID_SIZE;
+        shape.setRadius(GRID_SIZE/2);
         shape.setFillColor(sf::Color::Blue);
-        shape.setPosition(x * GRID_SIZE, y * GRID_SIZE);
+        shape.setPosition(pos.x * GRID_SIZE, pos.y * GRID_SIZE);
     }
 
     void draw(sf::RenderWindow& window) { window.draw(shape); }
+};
+
+class Shop {
+    public:
+	sf::RectangleShape shopTower;
+    bool isDragging;
+	Shop() {
+		shopTower.setSize(sf::Vector2f(GRID_SIZE*2, GRID_SIZE * 2));
+		shopTower.setFillColor(sf::Color::Red);
+		shopTower.setPosition(26 * GRID_SIZE, 0);  // shop location
+        isDragging = false;
+	}
+	void draw(sf::RenderWindow& window) { window.draw(shopTower); }
 };
 
 // ========== Map ==========
@@ -225,6 +239,8 @@ void buildPathNetwork(PathNode* start, string movement, Map* gameMap) {
 // ========== Game Manager ==========
 class GameManager {
     Map* gameMap;
+	Shop shop;
+	RectangleShape dragTower;
     vector<Tower*> towers;
     vector<Enemy*> enemies;
     PathNode* pathHead;
@@ -246,28 +262,50 @@ public:
         // Spawn one enemy
         enemies.push_back(new Enemy(100, 1, pathHead));
 
-        // Place one tower
-        towers.push_back(new Tower(3, 3, 2));
+        dragTower.setSize(sf::Vector2f(GRID_SIZE, GRID_SIZE));
+        dragTower.setFillColor(sf::Color::Red);
+        dragTower.setPosition(26 * GRID_SIZE, 0);
     }
 
-    void update() {
+    void checkShopDrag(sf::Vector2f coord, bool clicked) {
+        if (shop.isDragging && !clicked) {
+            shop.isDragging = false;
+            towers.push_back(new Tower(dragTower.getPosition()));
+        }
+		if (shop.shopTower.getGlobalBounds().contains(coord))
+		{
+            shop.isDragging = true;
+		}
+    }
+
+    void update(Vector2f mousePos) {
         float dt = clock.getElapsedTime().asSeconds();
         if (dt - enemyMoveTimer > 0.5f) {
             for (auto& e : enemies) e->move();
             enemyMoveTimer = dt;
         }
+
+        if (shop.isDragging)
+        {
+            dragTower.setPosition(mousePos.x - dragTower.getSize().x / 2,
+                mousePos.y - dragTower.getSize().y / 2);
+        }
     }
 
     void draw(sf::RenderWindow& window) {
         gameMap->draw(window);
-        /* for (auto& t : towers) t->draw(window);*/
+		shop.draw(window);
+        for (auto& t : towers) t->draw(window);
         for (auto& e : enemies) e->draw(window);
+        if (shop.isDragging) {
+			window.draw(dragTower);
+        }
     }
 };
 
 // ========== MAIN ==========
 int main() {
-    sf::RenderWindow window(sf::VideoMode(26 * GRID_SIZE, 14 * GRID_SIZE), "Tower Defense - SFML Demo");
+    sf::RenderWindow window(sf::VideoMode(26 * GRID_SIZE + 2 * GRID_SIZE, 14 * GRID_SIZE), "Tower Defense - SFML Demo");
     window.setFramerateLimit(60);
 
     GameManager game;
@@ -277,9 +315,23 @@ int main() {
         while (window.pollEvent(event)) {
             if (event.type == sf::Event::Closed)
                 window.close();
+
+            //Mouse press: begin drag if clicked on the shop item
+            if (event.type == sf::Event::MouseButtonPressed &&
+                event.mouseButton.button == sf::Mouse::Left)
+            {
+                game.checkShopDrag(window.mapPixelToCoords(sf::Mouse::getPosition(window)), true);
+            }
+
+            // Mouse release: drop tower
+            if (event.type == sf::Event::MouseButtonReleased &&
+                event.mouseButton.button == sf::Mouse::Left)
+            {       
+				game.checkShopDrag({0,0}, false);
+            }
         }
 
-        game.update();
+        game.update(window.mapPixelToCoords(sf::Mouse::getPosition(window)));
 
         window.clear();
         game.draw(window);

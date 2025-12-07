@@ -50,18 +50,18 @@ public:
         // You can add logic here to choose left/right at branches
     }
 
-    bool isAlive() {return alive;}
+    bool isAlive() { return alive; }
 
-	Vector2f getPosition() { return shape.getPosition(); }
+    Vector2f getPosition() { return shape.getPosition(); }
 
-	void takeDamage(int dmg) {
-		health -= dmg;
-		if (health <= 0) {
-			alive = false;
-		}
-	}
+    void takeDamage(int dmg) {
+        health -= dmg;
+        if (health <= 0) {
+            alive = false;
+        }
+    }
 
-	float getRadius() { return shape.getRadius(); }
+    float getRadius() { return shape.getRadius(); }
 
     void draw(sf::RenderWindow& window) { window.draw(shape); }
 };
@@ -76,7 +76,7 @@ class Projectile {
     bool alive = true;
     CircleShape shape;
 
-    public:
+public:
     Projectile(const sf::Vector2f& startPos, Enemy* targetEnemy, int dmg, float spd)
         : target(targetEnemy), damage(dmg), speed(spd)
     {
@@ -151,9 +151,10 @@ public:
     float fireRate;
     int points;
     bool isSelected = false;
-	float timer = 0.0f;
-	vector<Projectile> projectiles;
+    float timer = 0.0f;
+    vector<Projectile> projectiles;
     float speed;
+    bool showUpgradeOptions = false;
 
     UpgradeNode* root;
     UpgradeNode* current;
@@ -161,7 +162,7 @@ public:
     sf::CircleShape shape;
     sf::CircleShape rangeCircle;
 
-    Tower(Vector2i coord = Vector2i(0,0)) {
+    Tower(Vector2i coord = Vector2i(0, 0)) {
         pos = Vector2i(coord.x, coord.y);;
         damage = 10;
         range = 4 * GRID_SIZE;
@@ -210,7 +211,7 @@ public:
             damage += targetNode->damageBoost;
             range += targetNode->rangeBoost;
             fireRate -= targetNode->fireRateBoost;
-			speed += targetNode->speedBoost;
+            speed += targetNode->speedBoost;
 
             rangeCircle.setRadius(range);
             rangeCircle.setOrigin(range, range);
@@ -235,32 +236,52 @@ public:
         return shape.getGlobalBounds().contains(mousePos);
     }
 
-    void draw(sf::RenderWindow& window) { 
-        window.draw(shape); 
+    void draw(sf::RenderWindow& window) {
+        window.draw(shape);
 
         if (isSelected) {
             window.draw(rangeCircle); // draw tower range
 
-            // Draw upgrade buttons
-            UpgradeNode* options[2];
-            int n = getAvailableUpgrades(options);
+            // Draw single upgrade button first
+            sf::RectangleShape upgradeBtn(sf::Vector2f(100, 30));
+            upgradeBtn.setPosition(pos.x * GRID_SIZE, pos.y * GRID_SIZE - 35);
+            upgradeBtn.setFillColor(sf::Color(100, 100, 250));
 
-            for (int i = 0; i < n; i++) {
-                sf::RectangleShape btn(sf::Vector2f(100, 40));
-                btn.setPosition(pos.x * GRID_SIZE, pos.y * GRID_SIZE + GRID_SIZE + i * 35);
-                btn.setFillColor(sf::Color(100, 100, 250));
+            sf::Font font;
+            if (!font.loadFromFile("C:/Windows/Fonts/arial.ttf")) {
+                std::cout << "Failed to load system font!" << std::endl;
+            }
 
-                sf::Font font;
-                font.loadFromFile("C:/Users/Dell/OneDrive/Desktop/Hatim/DSA/DS_Proj/GoldenAvocadoSans.otf"); 
-                sf::Text txt;
-                txt.setFont(font);
-                txt.setString(options[i]->name + "\nCost: " + to_string(options[i]->cost));
-                txt.setCharacterSize(12);
-                txt.setFillColor(sf::Color::White);
-                txt.setPosition(btn.getPosition().x + 5, btn.getPosition().y + 5);
+            sf::Text txt;
+            txt.setFont(font);
+            txt.setString("Upgrade");
+            txt.setCharacterSize(12);
+            txt.setFillColor(sf::Color::White);
+            txt.setPosition(upgradeBtn.getPosition().x + 20, upgradeBtn.getPosition().y + 5);
 
-                window.draw(btn);
-                window.draw(txt);
+            window.draw(upgradeBtn);
+            window.draw(txt);
+
+            // Only show upgrade options if the upgrade button was clicked
+            if (showUpgradeOptions) {
+                UpgradeNode* options[2];
+                int n = getAvailableUpgrades(options);
+
+                for (int i = 0; i < n; i++) {
+                    sf::RectangleShape btn(sf::Vector2f(100, 40));
+                    btn.setPosition(pos.x * GRID_SIZE, pos.y * GRID_SIZE + GRID_SIZE + i * 45);
+                    btn.setFillColor(sf::Color(100, 100, 250));
+
+                    sf::Text optionTxt;
+                    optionTxt.setFont(font);
+                    optionTxt.setString(options[i]->name + "\nCost: " + to_string(options[i]->cost));
+                    optionTxt.setCharacterSize(12);
+                    optionTxt.setFillColor(sf::Color::White);
+                    optionTxt.setPosition(btn.getPosition().x + 5, btn.getPosition().y + 5);
+
+                    window.draw(btn);
+                    window.draw(optionTxt);
+                }
             }
         }
 
@@ -520,12 +541,56 @@ public:
     }
 
     void checkTowerClick(sf::Vector2f mousePos) {
-        for (auto& t : towers) t->isSelected = false; // deselect all first
+        bool clickedOnTower = false;
+        bool clickedOnUpgradeUI = false;
 
+        // Check if clicking on any tower
         for (auto& t : towers) {
             if (t->shape.getGlobalBounds().contains(mousePos)) {
-                t->isSelected = true;
-                break;
+                clickedOnTower = true;
+            }
+
+            // Check if clicking on upgrade button
+            if (t->isSelected) {
+                FloatRect upgradeBtnRect(t->pos.x * GRID_SIZE, t->pos.y * GRID_SIZE - 35, 100, 30);
+                if (upgradeBtnRect.contains(mousePos)) {
+                    clickedOnUpgradeUI = true;
+                }
+
+                // Check if clicking on upgrade options
+                if (t->showUpgradeOptions) {
+                    UpgradeNode* options[2];
+                    int n = t->getAvailableUpgrades(options);
+                    for (int i = 0; i < n; i++) {
+                        FloatRect btnRect(t->pos.x * GRID_SIZE, t->pos.y * GRID_SIZE + GRID_SIZE + i * 45, 100, 40);
+                        if (btnRect.contains(mousePos)) {
+                            clickedOnUpgradeUI = true;
+                        }
+                    }
+                }
+            }
+        }
+
+        if (!clickedOnTower && !clickedOnUpgradeUI) {
+            for (auto& t : towers) {
+                t->isSelected = false;
+                t->showUpgradeOptions = false;
+            }
+        }
+        // If clicking on a tower, select it
+        else if (clickedOnTower && !clickedOnUpgradeUI) {
+            // First deselect all
+            for (auto& t : towers) {
+                t->isSelected = false;
+                t->showUpgradeOptions = false;
+            }
+
+            // Then select the clicked tower
+            for (auto& t : towers) {
+                if (t->shape.getGlobalBounds().contains(mousePos)) {
+                    t->isSelected = true;
+                    break;
+                }
             }
         }
     }
@@ -533,13 +598,21 @@ public:
     void checkUpgradeClick(sf::Vector2f mousePos) {
         for (auto& t : towers) {
             if (t->isSelected) {
-                UpgradeNode* options[2];
-                int n = t->getAvailableUpgrades(options);
+                FloatRect upgradeBtnRect(t->pos.x * GRID_SIZE, t->pos.y * GRID_SIZE - 35, 100, 30);
+                if (upgradeBtnRect.contains(mousePos)) {
+                    t->showUpgradeOptions = !t->showUpgradeOptions;  // Toggle upgrade options
+                    return;  // Return early so we don't process tower click
+                }
+                if (t->showUpgradeOptions) {
+                    UpgradeNode* options[2];
+                    int n = t->getAvailableUpgrades(options);
 
-                for (int i = 0; i < n; i++) {
-                    FloatRect btnRect(t->pos.x * GRID_SIZE, t->pos.y * GRID_SIZE + GRID_SIZE + i * 35, 100, 30);
-                    if (btnRect.contains(mousePos)) {
-                        t->upgrade(options[i]);
+                    for (int i = 0; i < n; i++) {
+                        FloatRect btnRect(t->pos.x * GRID_SIZE, t->pos.y * GRID_SIZE + GRID_SIZE + i * 45, 100, 40);
+                        if (btnRect.contains(mousePos)) {
+                            t->upgrade(options[i]);
+                            t->showUpgradeOptions = false;  // Hide options after upgrading
+                        }
                     }
                 }
             }
@@ -599,10 +672,10 @@ int main() {
             if (event.type == sf::Event::MouseButtonPressed &&
                 event.mouseButton.button == sf::Mouse::Left)
             {
-				sf::Vector2f mousePos = window.mapPixelToCoords(sf::Mouse::getPosition(window));
-                game.checkShopDrag(mousePos, true);
-                game.checkTowerClick(mousePos);
+                sf::Vector2f mousePos = window.mapPixelToCoords(sf::Mouse::getPosition(window));
                 game.checkUpgradeClick(mousePos);
+                game.checkTowerClick(mousePos);
+                game.checkShopDrag(mousePos, true);
             }
 
             // Mouse release: drop tower

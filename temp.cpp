@@ -1193,7 +1193,7 @@ public:
             // Check if clicking on upgrade button
             if (t->isSelected)
             {
-                FloatRect upgradeBtnRect(t->pos.x * GRID_SIZE, t->pos.y * GRID_SIZE - 35, 100, 30);
+                FloatRect upgradeBtnRect(t->pos.x * GRID_SIZE, t->pos.y * GRID_SIZE - 70, 100, 30);
                 if (upgradeBtnRect.contains(mousePos))
                 {
                     clickedOnUpgradeUI = true;
@@ -1206,9 +1206,8 @@ public:
                     int n = t->getAvailableUpgrades(options);
                     for (int i = 0; i < n; i++)
                     {
-                        FloatRect btnRect(t->pos.x * GRID_SIZE, t->pos.y * GRID_SIZE + GRID_SIZE + i * 45, 100, 40);
-                        if (btnRect.contains(mousePos))
-                        {
+                        FloatRect modeBtnRect(t->pos.x * GRID_SIZE, t->pos.y * GRID_SIZE - 35, 100, 30);
+                        if (modeBtnRect.contains(mousePos)) {
                             clickedOnUpgradeUI = true;
                         }
                     }
@@ -1252,11 +1251,11 @@ public:
         {
             if (t->isSelected)
             {
-                FloatRect upgradeBtnRect(t->pos.x * GRID_SIZE, t->pos.y * GRID_SIZE - 35, 100, 30);
-                if (upgradeBtnRect.contains(mousePos))
-                {
-                    t->showUpgradeOptions = !t->showUpgradeOptions; // Toggle upgrade options
-                    return;                                         // Return early so we don't process tower click
+                FloatRect upgradeBtnRect(t->pos.x * GRID_SIZE, t->pos.y * GRID_SIZE - 70, 100, 30);
+                if (upgradeBtnRect.contains(mousePos)) {
+                    t->showUpgradeOptions = !t->showUpgradeOptions;  // Toggle upgrade options
+                    t->showModeOptions = false;  // Close mode options if open
+                    return;  // Return early
                 }
                 if (t->showUpgradeOptions)
                 {
@@ -1452,8 +1451,8 @@ int main()
                 event.mouseButton.button == Mouse::Left)
             {
                 Vector2f mousePos = window.mapPixelToCoords(Mouse::getPosition(window));
-                game.checkModeClick(mousePos);
                 game.checkUpgradeClick(mousePos);
+                game.checkModeClick(mousePos);
                 game.checkTowerClick(mousePos);
                 game.checkShopDrag(mousePos, true);
             }

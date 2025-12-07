@@ -28,15 +28,12 @@ class Enemy {
     PathNode* current;
     sf::CircleShape shape;
     bool alive = true;
+    float moveProgress = 0.0f;
+    float moveInterval;
 public:
-    Enemy(int hp, int spd, PathNode* start, int x) : health(hp), speed(spd), current(start) {
-        shape.setRadius(10);
-        if (x == 1) {
-			shape.setFillColor(sf::Color::Red);
-		}
-		else {
-			shape.setFillColor(sf::Color::Yellow);
-        }
+    Enemy(int hp, PathNode* start, sf::Color c, float moveInterval) : health(hp), current(start), moveInterval(moveInterval) {
+        shape.setRadius(8);
+        shape.setFillColor(c);
         shape.setPosition(start->pos.x * GRID_SIZE, start->pos.y * GRID_SIZE);
     }
 
@@ -55,6 +52,14 @@ public:
         }
         // You can add logic here to choose left/right at branches
     }
+    void update(float dt) {
+        if (!alive) return;
+        moveProgress += dt;
+        if (moveProgress >= moveInterval /* or based on speed */) {
+            moveProgress -= moveInterval;
+            move(); // Advance to next PathNode
+        }
+    }
 
     bool isAlive() { return alive; }
 
@@ -67,11 +72,35 @@ public:
         }
     }
 
+    bool reachedEndOfPath() const {
+        return !(current && (current->front || current->left || current->right));
+    }
+
     float getRadius() { return shape.getRadius(); }
 
     void draw(sf::RenderWindow& window) { window.draw(shape); }
 };
 
+class RedEnemy : public Enemy {
+public:
+    RedEnemy(PathNode* start)
+        : Enemy(10, start, sf::Color::Red, 0.2f) {
+    }
+};
+
+class BlueEnemy : public Enemy {
+public:
+    BlueEnemy(PathNode* start)
+        : Enemy(25, start, sf::Color::Blue,0.3f) {
+    }
+};
+
+class GreenEnemy : public Enemy {
+public:
+    GreenEnemy(PathNode* start)
+        : Enemy(40, start, sf::Color::Green, 0.3f) {
+    }
+};
 
 // ========== Tower ==========
 
@@ -294,8 +323,7 @@ public:
         for (auto& p : projectiles) {
             p.draw(window);
         }
-	}
-
+    }
     void update(float dt, vector<Enemy*>& enemies) {
         timer -= dt;
         Enemy* target;
@@ -588,7 +616,22 @@ class GameManager {
     PathNode* pathHead;
     sf::Clock clock;
     float enemyMoveTimer;
+
+    vector<int> wavePattern;
+    int maxEnemies = 0;
+    int enemiesSpawned = 0;
+    float spawnTimer = 0.0f;
+    float spawnDelay = 0.5f;
+    float wavePauseTimer = 0.0f;
+    float wavePauseDuration = 0.002f;
+    bool waveActive = true;
+    int currentWave = 1;
 public:
+
+    int getWaveCount()
+    {
+        return currentWave;
+    }
     GameManager() {
         gameMap = new Map(36, 52);
         enemyMoveTimer = 0;
@@ -602,8 +645,8 @@ public:
         pathHead = start;
 
         // Spawn one enemy
-        enemies.push_back(new Enemy(20, 1, pathHead, 1));
-        enemies.push_back(new Enemy(10, 1, pathHead, 2));
+        //enemies.push_back(new Enemy(20, 1, pathHead, 1));
+        //enemies.push_back(new Enemy(10, 1, pathHead, 2));
     }
 
     void checkShopDrag(sf::Vector2f coord, bool clicked) {
@@ -705,27 +748,107 @@ public:
         }
     }
 
-    void update(Vector2f mousePos, float dt) {
-        float dtt = clock.getElapsedTime().asSeconds();
+    void update(Vector2f mousePos, float dt, float dtt) {
 
         enemies.erase(
-            remove_if(enemies.begin(), enemies.end(), [](Enemy*& e) { return !e->isAlive(); }),
+            remove_if(enemies.begin(), enemies.end(),
+                [](Enemy*& e) {
+                    return !e->isAlive() || e->reachedEndOfPath();
+                }),
             enemies.end()
         );
 
-        if (dtt - enemyMoveTimer > 0.5f) {
-            for (auto& e : enemies) e->move();
-            enemyMoveTimer = dtt;
+
+        for (auto& e : enemies)
+            e->update(dt);
+
+        // -------- SPAWN LOGIC with CHECKS --------
+        if (waveActive && maxEnemies > 0 && enemiesSpawned < maxEnemies) {
+            spawnTimer += dt;
+            while (spawnTimer >= spawnDelay && enemiesSpawned < maxEnemies) {
+
+                if (enemiesSpawned < wavePattern.size()) {
+                    int type = wavePattern[enemiesSpawned];
+
+                    if (type == 0)
+                        enemies.push_back(new RedEnemy(pathHead));
+                    else if (type == 1)
+                        enemies.push_back(new BlueEnemy(pathHead));
+                    else if (type == 2)
+                        enemies.push_back(new GreenEnemy(pathHead));
+
+                    enemiesSpawned++;
+                }
+                spawnTimer -= spawnDelay;
+            }
         }
 
+        // -------- WAVE CLEARED CHECK --------
+        if (waveActive && enemiesSpawned == maxEnemies && enemies.empty()) {
+            waveActive = false;
+            wavePauseTimer = 0.0f;
+        }
+
+        // -------- PAUSE TIMER & NEXT WAVE --------
+        if (!waveActive) {
+            wavePauseTimer += dt;
+            if (wavePauseTimer >= wavePauseDuration) {
+                startNextWave();
+            }
+        }
+
+        // Update towers
         for (auto& t : towers)
             t->update(dt, enemies);
 
-        if (shop.isDragging)
-        {
+        // Handle dragging
+        if (shop.isDragging) {
             dragTower.shape.setPosition(mousePos.x - dragTower.shape.getRadius(),
                 mousePos.y - dragTower.shape.getRadius());
         }
+    }
+
+    void startNextWave() {
+
+        if (currentWave > 5) {
+
+            waveActive = false;
+            return;
+        }
+
+        wavePattern.clear();
+
+        if (currentWave == 1)
+            for (int i = 0; i < 10; ++i) wavePattern.push_back(0);
+
+        if (currentWave == 2) {
+            for (int i = 0; i < 5; ++i) wavePattern.push_back(1);
+        }
+
+        if (currentWave == 3) {
+            //for (int i = 0; i < 5; ++i)
+              //  wavePattern.push_back(0);
+            for (int i = 0; i < 5; ++i)
+                wavePattern.push_back(1);
+            for (int i = 0; i < 10; ++i)
+                wavePattern.push_back(2);
+        }
+
+		        if (currentWave >= 4) {
+            //for (int i = 0; i < 5; ++i)
+              //  wavePattern.push_back(0);
+            for (int i = 0; i < 10; ++i)
+                wavePattern.push_back(1);
+            for (int i = 0; i < 10; ++i)
+                wavePattern.push_back(2);
+        }
+
+        maxEnemies = static_cast<int>(wavePattern.size());
+        enemiesSpawned = 0;
+        spawnTimer = 0.0f;
+        waveActive = true;
+        wavePauseTimer = 0.0f;
+        currentWave++; // increment wave for the next start
     }
 
     void draw(sf::RenderWindow& window) {
@@ -737,6 +860,8 @@ public:
             dragTower.draw(window);
         }
     }
+
+    //friend class Player
 };
 
 // ========== MAIN ==========
@@ -746,6 +871,8 @@ int main() {
 
     GameManager game;
     Clock clock;
+
+	float dtt = clock.getElapsedTime().asSeconds();
 
     while (window.isOpen()) {
         sf::Event event;
@@ -772,7 +899,7 @@ int main() {
             }
         }
 
-        game.update(window.mapPixelToCoords(sf::Mouse::getPosition(window)), dt);
+        game.update(window.mapPixelToCoords(sf::Mouse::getPosition(window)), dt, dtt);
 
         window.clear();
         game.draw(window);

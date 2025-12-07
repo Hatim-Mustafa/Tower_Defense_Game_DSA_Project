@@ -55,19 +55,18 @@ public:
         // You can add logic here to choose left/right at branches
     }
 
-    bool isAlive() {return alive;}
+    bool isAlive() { return alive; }
 
-	Vector2f getPosition() { return shape.getPosition(); }
+    Vector2f getPosition() { return shape.getPosition(); }
 
-	void takeDamage(int dmg) {
-		health -= dmg;
-		if (health <= 0) {
-            cout << "dead" << endl;
-			alive = false;
-		}
-	}
+    void takeDamage(int dmg) {
+        health -= dmg;
+        if (health <= 0) {
+            alive = false;
+        }
+    }
 
-	float getRadius() { return shape.getRadius(); }
+    float getRadius() { return shape.getRadius(); }
 
     void draw(sf::RenderWindow& window) { window.draw(shape); }
 };
@@ -82,7 +81,7 @@ class Projectile {
     bool alive = true;
     CircleShape shape;
 
-    public:
+public:
     Projectile(const sf::Vector2f& startPos, Enemy* targetEnemy, int dmg, float spd)
         : target(targetEnemy), damage(dmg), speed(spd)
     {
@@ -157,8 +156,8 @@ public:
     float fireRate;
     int points;
     bool isSelected = false;
-	float timer = 0.0f;
-	vector<Projectile> projectiles;
+    float timer = 0.0f;
+    vector<Projectile> projectiles;
     float speed;
     bool showUpgradeOptions = false;
 
@@ -168,7 +167,7 @@ public:
     sf::CircleShape shape;
     sf::CircleShape rangeCircle;
 
-    Tower(Vector2i coord = Vector2i(0,0)) {
+    Tower(Vector2i coord = Vector2i(0, 0)) {
         pos = Vector2i(coord.x, coord.y);;
         damage = 10;
         range = 4 * GRID_SIZE;
@@ -217,7 +216,7 @@ public:
             damage += targetNode->damageBoost;
             range += targetNode->rangeBoost;
             fireRate -= targetNode->fireRateBoost;
-			speed += targetNode->speedBoost;
+            speed += targetNode->speedBoost;
 
             rangeCircle.setRadius(range);
             rangeCircle.setOrigin(range, range);
@@ -254,7 +253,7 @@ public:
             upgradeBtn.setFillColor(sf::Color(100, 100, 250));
 
             sf::Font font;
-            if (!font.loadFromFile("C:/Users/Dell/OneDrive/Desktop/Hatim/DSA/DS_Proj/GoldenAvocadoSans.otf")) {
+            if (!font.loadFromFile("C:/Windows/Fonts/arial.ttf")) {
                 std::cout << "Failed to load system font!" << std::endl;
             }
 
@@ -289,6 +288,10 @@ public:
                     window.draw(optionTxt);
                 }
             }
+        }
+
+        for (auto& p : projectiles) {
+            p.draw(window);
         }
 	}
     void update(float dt, vector<Enemy*>& enemies) {
@@ -720,10 +723,10 @@ int main() {
             if (event.type == sf::Event::MouseButtonPressed &&
                 event.mouseButton.button == sf::Mouse::Left)
             {
-				sf::Vector2f mousePos = window.mapPixelToCoords(sf::Mouse::getPosition(window));
-                game.checkShopDrag(mousePos, true);
-                game.checkTowerClick(mousePos);
+                sf::Vector2f mousePos = window.mapPixelToCoords(sf::Mouse::getPosition(window));
                 game.checkUpgradeClick(mousePos);
+                game.checkTowerClick(mousePos);
+                game.checkShopDrag(mousePos, true);
             }
 
             // Mouse release: drop tower

@@ -11,6 +11,9 @@ using namespace sf;
 #define GRID_SIZE 20
 #define PIXEL 4
 
+class Player; // Forward declaration
+class GameManager; // Forward declaration
+
 // ========== Coordinate ==========
 struct Coordinate
 {
@@ -226,7 +229,7 @@ public:
 struct UpgradeNode
 {
     string name;
-    int cost;
+    int UpgradeCost;
     int damageBoost;
     int rangeBoost;
     float fireRateBoost;
@@ -236,7 +239,7 @@ struct UpgradeNode
     UpgradeNode* right;
 
     UpgradeNode(string n, int c, int dmg, int rng, float rate, float spd)
-        : name(n), cost(c), damageBoost(dmg), rangeBoost(rng),
+        : name(n), UpgradeCost(c), damageBoost(dmg), rangeBoost(rng),
         fireRateBoost(rate), left(nullptr), right(nullptr), speedBoost(spd)
     {
     }
@@ -249,7 +252,7 @@ public:
     int damage;
     int range;
     float fireRate;
-    int points;
+    int TowerCost;
     bool isSelected = false;
     float timer = 0.0f;
     vector<Projectile> projectiles;
@@ -269,14 +272,13 @@ public:
         damage = 10;
         range = 6 * GRID_SIZE;
         fireRate = 3.0f;
-        points = 150;
+        TowerCost = 150;
         speed = 250.f;
 
         shape.setRadius(GRID_SIZE);
         shape.setFillColor(sf::Color::Blue);
         shape.setPosition(pos.x * GRID_SIZE, pos.y * GRID_SIZE);
-        rangeCircle.setOrigin(GRID_SIZE, GRID_SIZE);
-
+        shape.setOrigin(GRID_SIZE, GRID_SIZE);
         rangeCircle.setRadius(range);
         rangeCircle.setOrigin(range, range);
         rangeCircle.setFillColor(sf::Color(0, 0, 255, 50));
@@ -310,26 +312,9 @@ public:
         root->right->right = new UpgradeNode("Shatter", 100, 10, 15, 0.1f, 5.f);
     }
 
-    bool upgrade(UpgradeNode* targetNode)
-    {
-        if ((current->left == targetNode || current->right == targetNode) && points >= targetNode->cost)
-        {
-            damage += targetNode->damageBoost;
-            range += targetNode->rangeBoost;
-            fireRate -= targetNode->fireRateBoost;
-            speed += targetNode->speedBoost;
+    bool upgrade(UpgradeNode* targetNode, Player player);
 
-            rangeCircle.setRadius(range);
-            rangeCircle.setOrigin(range, range);
-
-            points -= targetNode->cost;
-            current = targetNode;
-
-            cout << "Upgraded to " << current->name << endl;
-            return true;
-        }
-        return false;
-    }
+	int getTowerCost() { return TowerCost; }
 
     int getAvailableUpgrades(UpgradeNode* options[2])
     {
@@ -389,7 +374,7 @@ public:
 
                     sf::Text optionTxt;
                     optionTxt.setFont(font);
-                    optionTxt.setString(options[i]->name + "\nCost: " + to_string(options[i]->cost));
+                    optionTxt.setString(options[i]->name + "\nCost: " + to_string(options[i]->UpgradeCost));
                     optionTxt.setCharacterSize(12);
                     optionTxt.setFillColor(sf::Color::White);
                     optionTxt.setPosition(btn.getPosition().x + 5, btn.getPosition().y + 5);
@@ -456,7 +441,7 @@ public:
     bool isDragging;
     Shop()
     {
-        shopTower.setSize(sf::Vector2f(GRID_SIZE * 4, GRID_SIZE * 4));
+        shopTower.setSize(sf::Vector2f(GRID_SIZE * PIXEL, GRID_SIZE * PIXEL));
         shopTower.setFillColor(sf::Color::Red);
         shopTower.setPosition(52 * GRID_SIZE, 0); // shop location
         isDragging = false;
@@ -720,13 +705,15 @@ class Player
     int health;
     sf::Font font;
     sf::Text healthText;
-    sf::ConvexShape heartShape;
+    sf::ConvexShape heartShape; 
+    sf::CircleShape coinIcon;
+    sf::Text moneyText;
 
 public:
     Player() : money(500), health(200)
     {
         // Load Font
-        if (!font.loadFromFile("C:/Windows/Fonts/arial.ttf"))
+        if (!font.loadFromFile("C:/Users/admin/Desktop/Project/pac2/ARIAL.TTF"))
         {
             std::cout << "Failed to load system font!" << std::endl;
         }
@@ -748,6 +735,17 @@ public:
 
         heartShape.setFillColor(sf::Color::Red);
         heartShape.setPosition(20, 10);
+
+        coinIcon.setRadius(15);
+        coinIcon.setFillColor(sf::Color(255, 215, 0));
+        coinIcon.setOutlineThickness(2);
+        coinIcon.setOutlineColor(sf::Color(184, 134, 11));
+        coinIcon.setPosition(150, 18);
+
+        moneyText.setFont(font);
+        moneyText.setCharacterSize(25);
+        moneyText.setFillColor(sf::Color::Yellow);
+        moneyText.setPosition(190, 15);
     }
 
     void updateHealth(Enemy& E)
@@ -755,10 +753,7 @@ public:
         health = health - E.gethealth();
     }
 
-    void increaseMoney()
-    {
-        // money = money + 100 * GameManager::CurrentWave();
-    }
+    void increaseMoney(GameManager& g);
 
     void decreaseMoney(int amount)
     {
@@ -775,6 +770,26 @@ public:
         window.draw(healthText);
     }
 };
+
+bool Tower::upgrade(UpgradeNode* targetNode, Player player)
+{
+    if ((current->left == targetNode || current->right == targetNode) && player.getMoney() >= targetNode->UpgradeCost)
+    {
+        damage += targetNode->damageBoost;
+        range += targetNode->rangeBoost;
+        fireRate -= targetNode->fireRateBoost;
+        speed += targetNode->speedBoost;
+
+        rangeCircle.setRadius(range);
+        rangeCircle.setOrigin(range, range);
+
+        player.decreaseMoney(targetNode->UpgradeCost);
+
+        cout << "Upgraded to " << current->name << endl;
+        return true;
+    }
+    return false;
+}
 
 int findCheapestNode(vector<PathCost*>& list)
 {
@@ -1007,7 +1022,7 @@ public:
             shop.isDragging = false;
             Vector2f coord = dragTower.shape.getPosition();
             Vector2i pos = Vector2i(round(coord.x / GRID_SIZE), round(coord.y / GRID_SIZE));
-            if (gameMap->isBuildable(pos.x, pos.y))
+            if (gameMap->isBuildable(pos.x, pos.y) && player.getMoney() > dragTower.getTowerCost())
             {
                 for (auto& t : towers)
                 {
@@ -1016,6 +1031,7 @@ public:
                         return; // Can't build on another tower
                     }
                 }
+                player.decreaseMoney(dragTower.getTowerCost());
                 towers.push_back(new Tower(pos));
                 updateSmartEnemyPaths();
             }
@@ -1133,7 +1149,7 @@ public:
                         FloatRect btnRect(t->pos.x * GRID_SIZE, t->pos.y * GRID_SIZE + GRID_SIZE + i * 45, 100, 40);
                         if (btnRect.contains(mousePos))
                         {
-                            t->upgrade(options[i]);
+                            t->upgrade(options[i], player);
                             t->showUpgradeOptions = false; // Hide options after upgrading
                         }
                     }
@@ -1291,10 +1307,15 @@ public:
     friend class Player;
 };
 
+void Player::increaseMoney(GameManager& g)
+{
+    money = money + 100 * g.getWaveCount();
+}
+
 // ========== MAIN ==========
 int main()
 {
-    sf::RenderWindow window(sf::VideoMode(52 * GRID_SIZE + 4 * GRID_SIZE, 36 * GRID_SIZE), "Tower Defense Game");
+    sf::RenderWindow window(sf::VideoMode(52 * GRID_SIZE + PIXEL * GRID_SIZE, 36 * GRID_SIZE), "Tower Defense Game");
     window.setFramerateLimit(60);
 
     GameManager game;

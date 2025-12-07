@@ -61,10 +61,10 @@ public:
     Player() : money(400), health(200)
     {
         // Load Font
-        if (!font.loadFromFile("C:/Users/admin/Desktop/Project/pac2/ARIAL.TTF"))
-        {
-            cout << "Failed to load system font!" << endl;
+        if (!font.loadFromFile("C:/Windows/Fonts/arial.ttf")) {
+            std::cout << "Failed to load font\n";
         }
+
 
         // Setup Health Text
         healthText.setFont(font);
@@ -124,6 +124,10 @@ public:
         window.draw(coinIcon);
         moneyText.setString(to_string(money));
         window.draw(moneyText);
+    }
+
+    void setHealth(int h) {
+        health = h;
     }
 };
 
@@ -344,7 +348,7 @@ public:
     float speed;
     bool showUpgradeOptions = false;
     bool showModeOptions = false;
-    string targetingMode = "First";
+    string targetingMode = "First Enemy";
 
     UpgradeNode* root;
     UpgradeNode* current;
@@ -358,7 +362,7 @@ public:
         ;
         damage = 10;
         range = 6 * GRID_SIZE;
-        fireRate = 3.0f;
+        fireRate = 2.0f;
         TowerCost = 150;
         speed = 250.f;
 
@@ -380,23 +384,23 @@ public:
         root = new UpgradeNode("Base Tower", 0, 10, 0, 0.0f, 0);
 
         // First tier
-        root->left = new UpgradeNode("Wizard Tower", 50, 15, 50, 0.2f, 10.f);
-        root->right = new UpgradeNode("Ice Tower", 50, 8, 20, 0.3f, 10.f);
+        root->left = new UpgradeNode("Wizard Tower", 50, 12, 30, 0.5f, 10.f);
+        root->right = new UpgradeNode("Ice Tower", 40, 8, 25, 0.4f, 10.f);
 
         // Wizard Tower upgrades
-        root->left->left = new UpgradeNode("Arcane Explosion", 100, 25, 20, 0.15f, 5.f);
-        root->left->right = new UpgradeNode("Cannon Tower", 100, 30, 40, 0.2f, 5.f);
+        root->left->left = new UpgradeNode("Arcane Explosion", 100, 15, 20, 0.3f, 10.f);
+        root->left->right = new UpgradeNode("Cannon Tower", 100, 25, 40, 0.0f, 7.f);
 
         // Cannon Tower upgrades
-        root->left->right->left = new UpgradeNode("Heavy Shot", 150, 50, 30, 0.25f, 5.f);
-        root->left->right->right = new UpgradeNode("Explosive Shell", 150, 45, 50, 0.2f, 5.f);
+        root->left->right->left = new UpgradeNode("Heavy Shot", 150, 20, 15, 0.25f, 5.f);
+        root->left->right->right = new UpgradeNode("Explosive Shell", 200, 25, 20, 0.2f, 5.f);
 
         // Lightning Chain upgrade remains for Wizard
-        root->left->left->left = new UpgradeNode("Lightning Chain", 150, 20, 30, 0.1f, 5.f);
+        root->left->left->left = new UpgradeNode("Lightning Chain", 150, 10, 15, 0.2f, 5.f);
 
         // Ice Tower upgrades
-        root->right->left = new UpgradeNode("Deep Freeze", 100, 5, 25, 0.1f, 5.f);
-        root->right->right = new UpgradeNode("Shatter", 100, 10, 15, 0.1f, 5.f);
+        root->right->left = new UpgradeNode("Deep Freeze", 120, 15, 25, 0.3f, 5.f);
+        root->right->right = new UpgradeNode("Shatter", 100, 10, 15, 0.5f, 5.f);
     }
 
     bool upgrade(UpgradeNode* targetNode, Player player);
@@ -434,10 +438,11 @@ public:
             modeBtn.setPosition(pos.x * GRID_SIZE, pos.y * GRID_SIZE - 35); // Below upgrade button
             modeBtn.setFillColor(Color(250, 100, 100)); // Different color for mode button
 
-            Font font;
+            sf::Font font;
             if (!font.loadFromFile("C:/Windows/Fonts/arial.ttf")) {
-                cout << "Failed to load system font!" << endl;
+                std::cout << "Failed to load font\n";
             }
+
 
             // Upgrade button text
             Text upgradeTxt;
@@ -562,19 +567,62 @@ public:
 
     Enemy* findTarget(const vector<Enemy*>& enemies)
     {
-        for (const auto& e : enemies)
-        {
-            if (!e->isAlive())
-                continue;
+        Enemy* enemy = nullptr;
+        if (targetingMode == "First Enemy") {
+            for (const auto& e : enemies)
+            {
+                if (!e->isAlive())
+                    continue;
 
-            float dist = sqrt(
-                pow(e->getPosition().x - shape.getPosition().x, 2) +
-                pow(e->getPosition().y - shape.getPosition().y, 2));
+                float dist = sqrt(
+                    pow(e->getPosition().x - shape.getPosition().x, 2) +
+                    pow(e->getPosition().y - shape.getPosition().y, 2));
 
-            if (dist <= range)
-                return e;
+                if (dist <= range) {
+                    enemy = e;
+                    break;
+                }
+            }
         }
-        return nullptr;
+        else if (targetingMode == "Strongest Enemy") {
+            int h = 0;
+            for (const auto& e : enemies)
+            {
+                if (!e->isAlive())
+                    continue;
+
+                float dist = sqrt(
+                    pow(e->getPosition().x - shape.getPosition().x, 2) +
+                    pow(e->getPosition().y - shape.getPosition().y, 2));
+
+                if (dist <= range) {
+                    if (e->gethealth() > h) {
+                        enemy = e;
+                        h = e->gethealth();
+                    }
+                }
+            }
+        }
+        else if (targetingMode == "Fastest Enemy") {
+            int f = 0;
+            for (const auto& e : enemies)
+            {
+                if (!e->isAlive())
+                    continue;
+
+                float dist = sqrt(
+                    pow(e->getPosition().x - shape.getPosition().x, 2) +
+                    pow(e->getPosition().y - shape.getPosition().y, 2));
+
+                if (dist <= range) {
+                    if (e->gethealth() > f) {
+                        enemy = e;
+                        f = e->gethealth();
+                    }
+                }
+            }
+        }
+        return enemy;
     }
 
     // Function to handle mode button click
@@ -597,9 +645,9 @@ public:
         FloatRect strongBtnRect(pos.x * GRID_SIZE - 25, pos.y * GRID_SIZE + GRID_SIZE + 35, 150, 30);
         FloatRect fastBtnRect(pos.x * GRID_SIZE - 25, pos.y * GRID_SIZE + GRID_SIZE + 70, 150, 30);
 
-        if (firstBtnRect.contains(mousePos)) return "First";
-        if (strongBtnRect.contains(mousePos)) return "Strongest";
-        if (fastBtnRect.contains(mousePos)) return "Fastest";
+        if (firstBtnRect.contains(mousePos)) return "First Enemy";
+        if (strongBtnRect.contains(mousePos)) return "Strongest Enemy";
+        if (fastBtnRect.contains(mousePos)) return "Fastest Enemy";
 
         return "";
     }
@@ -610,14 +658,31 @@ class Shop
 public:
     RectangleShape shopTower;
     bool isDragging;
+    Text waveText;
     Shop()
     {
         shopTower.setSize(Vector2f(GRID_SIZE * PIXEL, GRID_SIZE * PIXEL));
         shopTower.setFillColor(Color::Red);
-        shopTower.setPosition(52 * GRID_SIZE, 0); // shop location
+        shopTower.setPosition(52 * GRID_SIZE, 35); // shop location
         isDragging = false;
+
+        static Font font;
+        if (font.loadFromFile("C:/Windows/Fonts/arial.ttf")) {
+            
+            waveText.setFont(font);
+            waveText.setString("SHOP");
+            waveText.setCharacterSize(24);
+            waveText.setFillColor(Color::White);
+            waveText.setStyle(Text::Bold);
+            float shopX = 26 * GRID_SIZE;  // Shop's left edge
+            float textWidth = waveText.getLocalBounds().width;
+
+            waveText.setPosition(shopX - textWidth + 590, 5);
+
+        }
     }
-    void draw(RenderWindow& window) { window.draw(shopTower); }
+    void draw(RenderWindow& window) { window.draw(shopTower); window.draw(waveText);
+    }
 };
 
 // ========== Map ==========
@@ -1083,6 +1148,7 @@ class GameManager
     PathNode* pathHead;
     Clock clock;
     float enemyMoveTimer;
+    bool isGameover;
 
     vector<int> wavePattern;
     int maxEnemies = 0;
@@ -1113,6 +1179,11 @@ public:
         buildPathNetwork(second, "UP", gameMap);
 
         pathHead = start;
+    }
+
+    bool isGameOver() const
+    {
+        return isGameover;
     }
 
     void checkShopDrag(Vector2f coord, bool clicked)
@@ -1277,7 +1348,7 @@ public:
         }
     }
 
-    void update(Vector2f mousePos, float dt, float dtt)
+    void update(Vector2f mousePos, float dt)
     {
 
         vector<Enemy*> reachedEnd;
@@ -1301,8 +1372,18 @@ public:
             delete e;
         }
 
-        for (auto& e : enemies)
-            e->update(dt);
+        if (player.getHealth() <= 0)
+        {
+            isGameover = true;
+            player.setHealth(0);
+            return;  // stop all further game updates
+        }
+
+        if (!isGameover)
+        {
+            for (auto& e : enemies)
+                e->update(dt);
+        }
 
         // -------- SPAWN LOGIC with CHECKS --------
         if (waveActive && maxEnemies > 0 && enemiesSpawned < maxEnemies)
@@ -1370,9 +1451,8 @@ public:
 
         wavePattern.clear();
 
-        if (currentWave == 1)
-            for (int i = 0; i < 10; ++i)
-                wavePattern.push_back(0);
+        for (int i = 0; i < 7; ++i)
+            wavePattern.push_back(0);
 
         if (currentWave == 2)
         {
@@ -1422,6 +1502,47 @@ public:
             dragTower.draw(window);
         }
         player.draw(window);
+
+        static Font font;
+        if (font.loadFromFile("C:/Windows/Fonts/arial.ttf")) {
+            Text waveText;
+            waveText.setFont(font);
+            waveText.setString("Wave: " + to_string(currentWave));
+            waveText.setCharacterSize(24);
+            waveText.setFillColor(Color::White);
+            waveText.setStyle(Text::Bold);
+            float shopX = 26 * GRID_SIZE;  // Shop's left edge
+            float textWidth = waveText.getLocalBounds().width;
+
+            waveText.setPosition(shopX - textWidth + 500, 5);
+
+            window.draw(waveText);
+        }
+
+        if (isGameover)
+        {
+            RectangleShape overlay;
+            overlay.setSize(Vector2f(window.getSize()));
+            overlay.setFillColor(Color(0, 0, 0, 150));
+            window.draw(overlay);
+
+            static Font font;
+            font.loadFromFile("C:/Windows/Fonts/arial.ttf");
+
+            Text txt;
+            txt.setFont(font);
+            txt.setString("GAME OVER!");
+            txt.setCharacterSize(120);
+            txt.setFillColor(Color::White);
+            txt.setOutlineThickness(5);
+            txt.setOutlineColor(Color::Black);
+
+            FloatRect bounds = txt.getLocalBounds();
+            txt.setOrigin(bounds.width / 2, bounds.height / 2);
+            txt.setPosition(window.getSize().x / 2, window.getSize().y / 2);
+
+            window.draw(txt);
+        }
     }
 
     friend class Player;
@@ -1435,8 +1556,6 @@ int main()
 
     GameManager game;
     Clock clock;
-
-    float dtt = clock.getElapsedTime().asSeconds();
 
     while (window.isOpen())
     {
@@ -1466,7 +1585,7 @@ int main()
             }
         }
 
-        game.update(window.mapPixelToCoords(Mouse::getPosition(window)), dt, dtt);
+        game.update(window.mapPixelToCoords(Mouse::getPosition(window)), dt);
 
         window.clear();
         game.draw(window);

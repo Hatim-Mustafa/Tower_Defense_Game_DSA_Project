@@ -5,7 +5,7 @@
 using namespace std;
 using namespace sf;
 
-#define GRID_SIZE 40
+#define GRID_SIZE 30
 
 // ========== Coordinate ==========
 struct Coordinate {
@@ -28,9 +28,14 @@ class Enemy {
     sf::CircleShape shape;
     bool alive = true;
 public:
-    Enemy(int hp, int spd, PathNode* start) : health(hp), speed(spd), current(start) {
+    Enemy(int hp, int spd, PathNode* start, int x) : health(hp), speed(spd), current(start) {
         shape.setRadius(10);
-        shape.setFillColor(sf::Color::Red);
+        if (x == 1) {
+			shape.setFillColor(sf::Color::Red);
+		}
+		else {
+			shape.setFillColor(sf::Color::Yellow);
+        }
         shape.setPosition(start->pos.x * GRID_SIZE, start->pos.y * GRID_SIZE);
     }
 
@@ -57,6 +62,7 @@ public:
 	void takeDamage(int dmg) {
 		health -= dmg;
 		if (health <= 0) {
+            cout << "dead" << endl;
 			alive = false;
 		}
 	}
@@ -93,11 +99,11 @@ class Projectile {
             return;
         }
 
-        sf::Vector2f pos = shape.getPosition();
-        sf::Vector2f targetPos = target->getPosition();
+        Vector2f pos = shape.getPosition();
+        Vector2f targetPos = target->getPosition();
 
-        sf::Vector2f dir = targetPos - pos;
-        float length = std::sqrt(dir.x * dir.x + dir.y * dir.y);
+        Vector2f dir = targetPos - pos;
+        float length = sqrt(dir.x * dir.x + dir.y * dir.y);
 
         if (length < 0.001f) {
             alive = false;
@@ -108,9 +114,9 @@ class Projectile {
         shape.move(dir * speed * dt);
 
         // collision check
-        float distance = std::sqrt(
-            std::pow(shape.getPosition().x - targetPos.x, 2) +
-            std::pow(shape.getPosition().y - targetPos.y, 2)
+        float distance = sqrt(
+            pow(shape.getPosition().x - targetPos.x, 2) +
+            pow(shape.getPosition().y - targetPos.y, 2)
         );
 
         if (distance < target->getRadius()) {
@@ -154,6 +160,7 @@ public:
 	float timer = 0.0f;
 	vector<Projectile> projectiles;
     float speed;
+    bool showUpgradeOptions = false;
 
     UpgradeNode* root;
     UpgradeNode* current;
@@ -235,48 +242,64 @@ public:
         return shape.getGlobalBounds().contains(mousePos);
     }
 
-    void draw(sf::RenderWindow& window) { 
-        window.draw(shape); 
+    void draw(sf::RenderWindow& window) {
+        window.draw(shape);
 
         if (isSelected) {
             window.draw(rangeCircle); // draw tower range
 
-            // Draw upgrade buttons
-            UpgradeNode* options[2];
-            int n = getAvailableUpgrades(options);
+            // Draw single upgrade button first
+            sf::RectangleShape upgradeBtn(sf::Vector2f(100, 30));
+            upgradeBtn.setPosition(pos.x * GRID_SIZE, pos.y * GRID_SIZE - 35);
+            upgradeBtn.setFillColor(sf::Color(100, 100, 250));
 
-            for (int i = 0; i < n; i++) {
-                sf::RectangleShape btn(sf::Vector2f(100, 40));
-                btn.setPosition(pos.x * GRID_SIZE, pos.y * GRID_SIZE + GRID_SIZE + i * 35);
-                btn.setFillColor(sf::Color(100, 100, 250));
+            sf::Font font;
+            if (!font.loadFromFile("C:/Users/Dell/OneDrive/Desktop/Hatim/DSA/DS_Proj/GoldenAvocadoSans.otf")) {
+                std::cout << "Failed to load system font!" << std::endl;
+            }
 
-                sf::Font font;
-                font.loadFromFile("C:/Users/Dell/OneDrive/Desktop/Hatim/DSA/DS_Proj/GoldenAvocadoSans.otf"); 
-                sf::Text txt;
-                txt.setFont(font);
-                txt.setString(options[i]->name + "\nCost: " + to_string(options[i]->cost));
-                txt.setCharacterSize(12);
-                txt.setFillColor(sf::Color::White);
-                txt.setPosition(btn.getPosition().x + 5, btn.getPosition().y + 5);
+            sf::Text txt;
+            txt.setFont(font);
+            txt.setString("Upgrade");
+            txt.setCharacterSize(12);
+            txt.setFillColor(sf::Color::White);
+            txt.setPosition(upgradeBtn.getPosition().x + 20, upgradeBtn.getPosition().y + 5);
 
-                window.draw(btn);
-                window.draw(txt);
+            window.draw(upgradeBtn);
+            window.draw(txt);
+
+            // Only show upgrade options if the upgrade button was clicked
+            if (showUpgradeOptions) {
+                UpgradeNode* options[2];
+                int n = getAvailableUpgrades(options);
+
+                for (int i = 0; i < n; i++) {
+                    sf::RectangleShape btn(sf::Vector2f(100, 40));
+                    btn.setPosition(pos.x * GRID_SIZE, pos.y * GRID_SIZE + GRID_SIZE + i * 45);
+                    btn.setFillColor(sf::Color(100, 100, 250));
+
+                    sf::Text optionTxt;
+                    optionTxt.setFont(font);
+                    optionTxt.setString(options[i]->name + "\nCost: " + to_string(options[i]->cost));
+                    optionTxt.setCharacterSize(12);
+                    optionTxt.setFillColor(sf::Color::White);
+                    optionTxt.setPosition(btn.getPosition().x + 5, btn.getPosition().y + 5);
+
+                    window.draw(btn);
+                    window.draw(optionTxt);
+                }
             }
         }
-
-        for (auto& p : projectiles) {
-            p.draw(window);
-        }
-    }
-
+	}
     void update(float dt, vector<Enemy*>& enemies) {
         timer -= dt;
-        if (timer > 0) return;
-
-        Enemy* target = findTarget(enemies);
-        if (target != nullptr) {
-            projectiles.push_back(Projectile(shape.getPosition(), target, damage, speed));
-            timer = fireRate;
+        Enemy* target;
+        if (timer <= 0) {
+            target = findTarget(enemies);
+            if (target != nullptr) {
+                projectiles.push_back(Projectile(shape.getPosition(), target, damage, speed));
+                timer = fireRate;
+            }
         }
 
         for (auto& p : projectiles) {
@@ -294,9 +317,9 @@ public:
         for (const auto& e : enemies) {
             if (!e->isAlive()) continue;
 
-            float dist = std::sqrt(
-                std::pow(e->getPosition().x - shape.getPosition().x, 2) +
-                std::pow(e->getPosition().y - shape.getPosition().y, 2)
+            float dist = sqrt(
+                pow(e->getPosition().x - shape.getPosition().x, 2) +
+                pow(e->getPosition().y - shape.getPosition().y, 2)
             );
 
             if (dist <= range)
@@ -311,9 +334,9 @@ public:
     sf::RectangleShape shopTower;
     bool isDragging;
     Shop() {
-        shopTower.setSize(sf::Vector2f(GRID_SIZE * 2, GRID_SIZE * 2));
+        shopTower.setSize(sf::Vector2f(GRID_SIZE * 3, GRID_SIZE * 3));
         shopTower.setFillColor(sf::Color::Red);
-        shopTower.setPosition(26 * GRID_SIZE, 0);  // shop location
+        shopTower.setPosition(39 * GRID_SIZE, 0);  // shop location
         isDragging = false;
     }
     void draw(sf::RenderWindow& window) { window.draw(shopTower); }
@@ -329,20 +352,41 @@ public:
         grid.assign(rows, vector<int>(cols, 0));
         // Manually mark the path based on your image
         grid = {
-            {1, 1, 2, 2, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-            {1, 1, 2, 2, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-            {0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1},
-            {0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1},
-            {1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1},
-            {1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1},
-            {1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 2, 2, 1, 1},
-            {1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 2, 2, 1, 1},
-            {1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1},
-            {1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1},
-            {1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1},
-            {1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1},
-            {1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1},
-            {1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1},
+            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+
+            {1, 1, 1, 2, 2, 2, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+            {1, 1, 1, 2, 2, 2, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+            {1, 1, 1, 2, 2, 2, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+
+            {0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1},
+            {0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1},
+            {0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1},
+
+            {1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1},
+            {1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1},
+            {1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1},
+
+            {1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 2, 2, 2, 1, 1, 1},
+            {1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 2, 2, 2, 1, 1, 1},
+            {1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 2, 2, 2, 1, 1, 1},
+
+            {1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1},
+            {1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1},
+            {1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1},
+
+            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1},
+            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1},
+            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1},
+
+            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1},
+            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1},
+            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1},
+
+            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1},
+            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1},
+            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1}
         };
 
         for (int i = 0; i < rows; i++) {
@@ -375,99 +419,123 @@ public:
 void buildPathNetwork(PathNode* start, string movement, Map* gameMap) {
     // Implement path network building logic here if needed
     if (movement == "UP") {
-        if (gameMap->isPath(start->pos.x, start->pos.y - 2)) {
+        if (gameMap->isPath(start->pos.x, start->pos.y - 3)) {
             PathNode* next = new PathNode({ start->pos.x, start->pos.y - 1 });
             start->front = next;
             PathNode* next2 = new PathNode({ start->pos.x, start->pos.y - 2 });
             next->front = next2;
-            buildPathNetwork(next2, movement, gameMap);
+            PathNode* next3 = new PathNode({ start->pos.x, start->pos.y - 3 });
+            next2->front = next3;
+            buildPathNetwork(next3, movement, gameMap);
         }
-        if (gameMap->isPath(start->pos.x - 2, start->pos.y)) {
+        if (gameMap->isPath(start->pos.x - 3, start->pos.y)) {
             PathNode* next = new PathNode({ start->pos.x - 1, start->pos.y });
             start->left = next;
             PathNode* next2 = new PathNode({ start->pos.x - 2, start->pos.y });
             next->front = next2;
-            buildPathNetwork(next2, "LEFT", gameMap);
+            PathNode* next3 = new PathNode({ start->pos.x - 3, start->pos.y });
+            next2->front = next3;
+            buildPathNetwork(next3, "LEFT", gameMap);
         }
-        if (gameMap->isPath(start->pos.x + 2, start->pos.y) &&
-            (start->pos.x != 3 || start->pos.y != 4) &&
-            (start->pos.x != 9 || start->pos.y != 8)) {
+        if (gameMap->isPath(start->pos.x + 3, start->pos.y) &&
+            (start->pos.x != 4 || start->pos.y != 10) &&
+            (start->pos.x != 13 || start->pos.y != 16)) {
             PathNode* next = new PathNode({ start->pos.x + 1, start->pos.y });
             start->right = next;
             PathNode* next2 = new PathNode({ start->pos.x + 2, start->pos.y });
             next->front = next2;
-            buildPathNetwork(next2, "RIGHT", gameMap);
+            PathNode* next3 = new PathNode({ start->pos.x + 3, start->pos.y });
+            next2->front = next3;
+            buildPathNetwork(next3, "RIGHT", gameMap);
         }
     }
     if (movement == "LEFT") {
-        if (gameMap->isPath(start->pos.x, start->pos.y - 2)) {
+        if (gameMap->isPath(start->pos.x, start->pos.y - 3)) {
             PathNode* next = new PathNode({ start->pos.x, start->pos.y - 1 });
-            start->right = next;
+            start->front = next;
             PathNode* next2 = new PathNode({ start->pos.x, start->pos.y - 2 });
             next->front = next2;
-            buildPathNetwork(next2, "UP", gameMap);
+            PathNode* next3 = new PathNode({ start->pos.x, start->pos.y - 3 });
+            next2->front = next3;
+            buildPathNetwork(next3, "UP", gameMap);
         }
-        if (gameMap->isPath(start->pos.x - 2, start->pos.y)) {
+        if (gameMap->isPath(start->pos.x - 3, start->pos.y)) {
             PathNode* next = new PathNode({ start->pos.x - 1, start->pos.y });
-            start->front = next;
+            start->left = next;
             PathNode* next2 = new PathNode({ start->pos.x - 2, start->pos.y });
             next->front = next2;
-            buildPathNetwork(next2, movement, gameMap);
+            PathNode* next3 = new PathNode({ start->pos.x - 3, start->pos.y });
+            next2->front = next3;
+            buildPathNetwork(next3, movement, gameMap);
         }
-        if (gameMap->isPath(start->pos.x, start->pos.y + 2) &&
-            (start->pos.x != 3 || start->pos.y != 4) &&
-            (start->pos.x != 9 || start->pos.y != 8)) {
+        if (gameMap->isPath(start->pos.x, start->pos.y + 3) &&
+            (start->pos.x != 4 || start->pos.y != 10) &&
+            (start->pos.x != 13 || start->pos.y != 16)) {
             PathNode* next = new PathNode({ start->pos.x, start->pos.y + 1 });
-            start->left = next;
+            start->right = next;
             PathNode* next2 = new PathNode({ start->pos.x, start->pos.y + 2 });
             next->front = next2;
-            buildPathNetwork(next2, "DOWN", gameMap);
+            PathNode* next3 = new PathNode({ start->pos.x, start->pos.y + 3 });
+            next2->front = next3;
+            buildPathNetwork(next3, "DOWN", gameMap);
         }
     }
     if (movement == "RIGHT") {
-        if (gameMap->isPath(start->pos.x, start->pos.y - 2)) {
+        if (gameMap->isPath(start->pos.x, start->pos.y - 3)) {
             PathNode* next = new PathNode({ start->pos.x, start->pos.y - 1 });
-            start->left = next;
+            start->front = next;
             PathNode* next2 = new PathNode({ start->pos.x, start->pos.y - 2 });
             next->front = next2;
-            buildPathNetwork(next2, "UP", gameMap);
+            PathNode* next3 = new PathNode({ start->pos.x, start->pos.y - 3 });
+            next2->front = next3;
+            buildPathNetwork(next3, "UP", gameMap);
         }
-        if (gameMap->isPath(start->pos.x, start->pos.y + 2)) {
+        if (gameMap->isPath(start->pos.x, start->pos.y + 3)) {
             PathNode* next = new PathNode({ start->pos.x, start->pos.y + 1 });
             start->right = next;
             PathNode* next2 = new PathNode({ start->pos.x, start->pos.y + 2 });
             next->front = next2;
-            buildPathNetwork(next2, "DOWN", gameMap);
+            PathNode* next3 = new PathNode({ start->pos.x, start->pos.y + 3 });
+            next2->front = next3;
+            buildPathNetwork(next3, "DOWN", gameMap);
         }
-        if (gameMap->isPath(start->pos.x + 2, start->pos.y)) {
+        if (gameMap->isPath(start->pos.x + 3, start->pos.y)) {
             PathNode* next = new PathNode({ start->pos.x + 1, start->pos.y });
-            start->front = next;
+            start->right = next;
             PathNode* next2 = new PathNode({ start->pos.x + 2, start->pos.y });
             next->front = next2;
-            buildPathNetwork(next2, movement, gameMap);
+            PathNode* next3 = new PathNode({ start->pos.x + 3, start->pos.y });
+            next2->front = next3;
+            buildPathNetwork(next3, movement, gameMap);
         }
     }
     if (movement == "DOWN") {
-        if (gameMap->isPath(start->pos.x, start->pos.y + 2)) {
+        if (gameMap->isPath(start->pos.x, start->pos.y + 3)) {
             PathNode* next = new PathNode({ start->pos.x, start->pos.y + 1 });
-            start->front = next;
+            start->right = next;
             PathNode* next2 = new PathNode({ start->pos.x, start->pos.y + 2 });
             next->front = next2;
-            buildPathNetwork(next2, movement, gameMap);
+            PathNode* next3 = new PathNode({ start->pos.x, start->pos.y + 3 });
+            next2->front = next3;
+            buildPathNetwork(next3, movement, gameMap);
         }
-        if (gameMap->isPath(start->pos.x - 2, start->pos.y)) {
+        if (gameMap->isPath(start->pos.x - 3, start->pos.y)) {
             PathNode* next = new PathNode({ start->pos.x - 1, start->pos.y });
-            start->right = next;
+            start->left = next;
             PathNode* next2 = new PathNode({ start->pos.x - 2, start->pos.y });
             next->front = next2;
-            buildPathNetwork(next2, "LEFT", gameMap);
+            PathNode* next3 = new PathNode({ start->pos.x - 3, start->pos.y });
+            next2->front = next3;
+            buildPathNetwork(next3, "LEFT", gameMap);
         }
-        if (gameMap->isPath(start->pos.x + 2, start->pos.y)) {
+        if (gameMap->isPath(start->pos.x + 3, start->pos.y)) {
             PathNode* next = new PathNode({ start->pos.x + 1, start->pos.y });
-            start->left = next;
+            start->right = next;
             PathNode* next2 = new PathNode({ start->pos.x + 2, start->pos.y });
             next->front = next2;
-            buildPathNetwork(next2, "RIGHT", gameMap);
+            PathNode* next3 = new PathNode({ start->pos.x + 3, start->pos.y });
+            next2->front = next3;
+            buildPathNetwork(next3, "RIGHT", gameMap);
         }
     }
 }
@@ -484,19 +552,20 @@ class GameManager {
     float enemyMoveTimer;
 public:
     GameManager() {
-        gameMap = new Map(14, 26);
+        gameMap = new Map(27, 39);
         enemyMoveTimer = 0;
 
         // Build the path network
-        PathNode* start = new PathNode({ 21,13 });
-        PathNode* second = new PathNode({ 21,12 });
+        PathNode* start = new PathNode({ 31,26 });
+        PathNode* second = new PathNode({ 31,25 });
         start->front = second;
         buildPathNetwork(second, "UP", gameMap);
 
         pathHead = start;
 
         // Spawn one enemy
-        enemies.push_back(new Enemy(10, 1, pathHead));
+        enemies.push_back(new Enemy(20, 1, pathHead, 1));
+        enemies.push_back(new Enemy(10, 1, pathHead, 2));
     }
 
     void checkShopDrag(sf::Vector2f coord, bool clicked) {
@@ -520,12 +589,56 @@ public:
     }
 
     void checkTowerClick(sf::Vector2f mousePos) {
-        for (auto& t : towers) t->isSelected = false; // deselect all first
+        bool clickedOnTower = false;
+        bool clickedOnUpgradeUI = false;
 
+        // Check if clicking on any tower
         for (auto& t : towers) {
             if (t->shape.getGlobalBounds().contains(mousePos)) {
-                t->isSelected = true;
-                break;
+                clickedOnTower = true;
+            }
+
+            // Check if clicking on upgrade button
+            if (t->isSelected) {
+                FloatRect upgradeBtnRect(t->pos.x * GRID_SIZE, t->pos.y * GRID_SIZE - 35, 100, 30);
+                if (upgradeBtnRect.contains(mousePos)) {
+                    clickedOnUpgradeUI = true;
+                }
+
+                // Check if clicking on upgrade options
+                if (t->showUpgradeOptions) {
+                    UpgradeNode* options[2];
+                    int n = t->getAvailableUpgrades(options);
+                    for (int i = 0; i < n; i++) {
+                        FloatRect btnRect(t->pos.x * GRID_SIZE, t->pos.y * GRID_SIZE + GRID_SIZE + i * 45, 100, 40);
+                        if (btnRect.contains(mousePos)) {
+                            clickedOnUpgradeUI = true;
+                        }
+                    }
+                }
+            }
+        }
+
+        if (!clickedOnTower && !clickedOnUpgradeUI) {
+            for (auto& t : towers) {
+                t->isSelected = false;
+                t->showUpgradeOptions = false;
+            }
+        }
+        // If clicking on a tower, select it
+        else if (clickedOnTower && !clickedOnUpgradeUI) {
+            // First deselect all
+            for (auto& t : towers) {
+                t->isSelected = false;
+                t->showUpgradeOptions = false;
+            }
+
+            // Then select the clicked tower
+            for (auto& t : towers) {
+                if (t->shape.getGlobalBounds().contains(mousePos)) {
+                    t->isSelected = true;
+                    break;
+                }
             }
         }
     }
@@ -533,13 +646,21 @@ public:
     void checkUpgradeClick(sf::Vector2f mousePos) {
         for (auto& t : towers) {
             if (t->isSelected) {
-                UpgradeNode* options[2];
-                int n = t->getAvailableUpgrades(options);
+                FloatRect upgradeBtnRect(t->pos.x * GRID_SIZE, t->pos.y * GRID_SIZE - 35, 100, 30);
+                if (upgradeBtnRect.contains(mousePos)) {
+                    t->showUpgradeOptions = !t->showUpgradeOptions;  // Toggle upgrade options
+                    return;  // Return early so we don't process tower click
+                }
+                if (t->showUpgradeOptions) {
+                    UpgradeNode* options[2];
+                    int n = t->getAvailableUpgrades(options);
 
-                for (int i = 0; i < n; i++) {
-                    FloatRect btnRect(t->pos.x * GRID_SIZE, t->pos.y * GRID_SIZE + GRID_SIZE + i * 35, 100, 30);
-                    if (btnRect.contains(mousePos)) {
-                        t->upgrade(options[i]);
+                    for (int i = 0; i < n; i++) {
+                        FloatRect btnRect(t->pos.x * GRID_SIZE, t->pos.y * GRID_SIZE + GRID_SIZE + i * 45, 100, 40);
+                        if (btnRect.contains(mousePos)) {
+                            t->upgrade(options[i]);
+                            t->showUpgradeOptions = false;  // Hide options after upgrading
+                        }
                     }
                 }
             }
@@ -582,7 +703,7 @@ public:
 
 // ========== MAIN ==========
 int main() {
-    sf::RenderWindow window(sf::VideoMode(26 * GRID_SIZE + 2 * GRID_SIZE, 14 * GRID_SIZE), "Tower Defense - SFML Demo");
+    sf::RenderWindow window(sf::VideoMode(39 * GRID_SIZE + 3 * GRID_SIZE, 27 * GRID_SIZE), "Tower Defense - SFML Demo");
     window.setFramerateLimit(60);
 
     GameManager game;

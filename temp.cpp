@@ -878,6 +878,7 @@ bool Tower::upgrade(UpgradeNode* targetNode, Player player)
         range += targetNode->rangeBoost;
         fireRate -= targetNode->fireRateBoost;
         speed += targetNode->speedBoost;
+        current = targetNode;
 
         rangeCircle.setRadius(range);
         rangeCircle.setOrigin(range, range);

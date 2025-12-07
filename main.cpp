@@ -61,10 +61,10 @@ public:
     Player() : money(400), health(200)
     {
         // Load Font
-        if (!font.loadFromFile("C:/Users/Dell/OneDrive/Desktop/Hatim/DSA/DS_Proj/Clash_Regular.otf"))
-        {
-            cout << "Failed to load system font!" << endl;
+        if (!font.loadFromFile("C:/Users/Dell/OneDrive/Desktop/Hatim/DSA/DS_Proj/Clash_Regular.otf")) {
+            std::cout << "Failed to load font\n";
         }
+
 
         // Setup Health Text
         healthText.setFont(font);
@@ -124,6 +124,10 @@ public:
         window.draw(coinIcon);
         moneyText.setString(to_string(money));
         window.draw(moneyText);
+    }
+
+    void setHealth(int h) {
+        health = h;
     }
 };
 
@@ -223,7 +227,7 @@ class RedEnemy : public Enemy
 {
 public:
     RedEnemy(PathNode* start, bool smart = false)
-        : Enemy(10, start, Color::Red, 0.2f, smart) {
+        : Enemy(10, start, Color::Red, 0.15f, smart) {
     }
 };
 
@@ -231,7 +235,7 @@ class BlueEnemy : public Enemy
 {
 public:
     BlueEnemy(PathNode* start, bool smart = false)
-        : Enemy(25, start, Color::Blue, 0.3f, smart) {
+        : Enemy(25, start, Color::Blue, 0.2f, smart) {
     }
 };
 
@@ -239,7 +243,7 @@ class GreenEnemy : public Enemy
 {
 public:
     GreenEnemy(PathNode* start, bool smart = false)
-        : Enemy(40, start, Color::Green, 0.3f, smart) {
+        : Enemy(40, start, Color::Green, 0.2f, smart) {
     }
 };
 
@@ -434,10 +438,11 @@ public:
             modeBtn.setPosition(pos.x * GRID_SIZE, pos.y * GRID_SIZE - 35); // Below upgrade button
             modeBtn.setFillColor(Color(250, 100, 100)); // Different color for mode button
 
-            Font font;
+            sf::Font font;
             if (!font.loadFromFile("C:/Users/Dell/OneDrive/Desktop/Hatim/DSA/DS_Proj/Clash_Regular.otf")) {
-                cout << "Failed to load system font!" << endl;
+                std::cout << "Failed to load font\n";
             }
+
 
             // Upgrade button text
             Text upgradeTxt;
@@ -653,14 +658,32 @@ class Shop
 public:
     RectangleShape shopTower;
     bool isDragging;
+    Text waveText;
     Shop()
     {
         shopTower.setSize(Vector2f(GRID_SIZE * PIXEL, GRID_SIZE * PIXEL));
         shopTower.setFillColor(Color::Red);
-        shopTower.setPosition(52 * GRID_SIZE, 0); // shop location
+        shopTower.setPosition(52 * GRID_SIZE, 35); // shop location
         isDragging = false;
+
+        static Font font;
+        if (font.loadFromFile("C:/Users/Dell/OneDrive/Desktop/Hatim/DSA/DS_Proj/Clash_Regular.otf")) {
+
+            waveText.setFont(font);
+            waveText.setString("SHOP");
+            waveText.setCharacterSize(24);
+            waveText.setFillColor(Color::White);
+            waveText.setStyle(Text::Bold);
+            float shopX = 26 * GRID_SIZE;  // Shop's left edge
+            float textWidth = waveText.getLocalBounds().width;
+
+            waveText.setPosition(shopX - textWidth + 590, 5);
+
+        }
     }
-    void draw(RenderWindow& window) { window.draw(shopTower); }
+    void draw(RenderWindow& window) {
+        window.draw(shopTower); window.draw(waveText);
+    }
 };
 
 // ========== Map ==========
@@ -668,6 +691,9 @@ class Map {
     int rows, cols;
     vector<vector<int>> grid;
     vector< RectangleShape> tiles;
+    sf::Texture mapTexture;
+    sf::Sprite mapSprite;
+    bool mapSpriteLoaded = false;
 public:
     Map(int r, int c) : rows(r), cols(c) {
         grid.assign(rows, vector<int>(cols, 0));
@@ -729,10 +755,19 @@ public:
                 tiles.push_back(rect);
             }
         }
+
+        if (mapTexture.loadFromFile("C:/Users/Dell/OneDrive/Desktop/Hatim/DSA/DS_Proj/DSAmap-1-Recovered.png")) {
+            mapSprite.setTexture(mapTexture);
+            mapSprite.setPosition(0, 0); // Make sure it lines up with tiles!
+            mapSpriteLoaded = true;
+        }
     }
 
     void draw(RenderWindow& window) {
-        for (auto& t : tiles) window.draw(t);
+        if (mapSpriteLoaded) {
+            window.draw(mapSprite);
+        }
+        //for (auto& t : tiles) window.draw(t);
     }
 
     bool isBuildable(int x, int y) {
@@ -1132,7 +1167,7 @@ class GameManager
     int maxEnemies = 0;
     int enemiesSpawned = 0;
     float spawnTimer = 0.0f;
-    float spawnDelay = 0.5f;
+    float spawnDelay = 0.7f;
     float wavePauseTimer = 0.0f;
     float wavePauseDuration = 0.002f;
     bool waveActive = true;
@@ -1197,15 +1232,17 @@ public:
                 // Check if clicking mode button
                 FloatRect modeBtnRect(t->pos.x * GRID_SIZE, t->pos.y * GRID_SIZE - 35, 100, 30);
                 if (modeBtnRect.contains(mousePos)) {
-                    t->toggleModeOptions();
-                    return;
+                    t->showModeOptions = !t->showModeOptions;  // Toggle mode options
+                    t->showUpgradeOptions = false;  // Close upgrade options if open
+                    return;  // Return early
                 }
-
-                // Check if clicking mode options
-                string mode = t->checkModeClick(mousePos);
-                if (!mode.empty()) {
-                    t->setTargetingMode(mode);
-                    return;
+                if (t->showModeOptions) {
+                    string mode = t->checkModeClick(mousePos);
+                    if (!mode.empty()) {
+                        t->setTargetingMode(mode);
+                        t->showModeOptions = false;  // Hide options after selection
+                        return;
+                    }
                 }
             }
         }
@@ -1240,11 +1277,19 @@ public:
                 clickedOnTower = true;
             }
 
-            // Check if clicking on upgrade button
+            // Check if clicking on upgrade button OR mode button
             if (t->isSelected)
             {
+                // Check upgrade button
                 FloatRect upgradeBtnRect(t->pos.x * GRID_SIZE, t->pos.y * GRID_SIZE - 70, 100, 30);
                 if (upgradeBtnRect.contains(mousePos))
+                {
+                    clickedOnUpgradeUI = true;
+                }
+
+                // Check mode button (ADD THIS)
+                FloatRect modeBtnRect(t->pos.x * GRID_SIZE, t->pos.y * GRID_SIZE - 35, 100, 30);
+                if (modeBtnRect.contains(mousePos))
                 {
                     clickedOnUpgradeUI = true;
                 }
@@ -1256,21 +1301,37 @@ public:
                     int n = t->getAvailableUpgrades(options);
                     for (int i = 0; i < n; i++)
                     {
-                        FloatRect modeBtnRect(t->pos.x * GRID_SIZE, t->pos.y * GRID_SIZE - 35, 100, 30);
-                        if (modeBtnRect.contains(mousePos)) {
+                        FloatRect btnRect(t->pos.x * GRID_SIZE, t->pos.y * GRID_SIZE + GRID_SIZE + i * 45, 100, 40);
+                        if (btnRect.contains(mousePos)) {
                             clickedOnUpgradeUI = true;
                         }
+                    }
+                }
+
+                // Check if clicking on mode options (ADD THIS)
+                if (t->showModeOptions)
+                {
+                    FloatRect firstBtnRect(t->pos.x * GRID_SIZE - 25, t->pos.y * GRID_SIZE + GRID_SIZE, 150, 30);
+                    FloatRect strongBtnRect(t->pos.x * GRID_SIZE - 25, t->pos.y * GRID_SIZE + GRID_SIZE + 35, 150, 30);
+                    FloatRect fastBtnRect(t->pos.x * GRID_SIZE - 25, t->pos.y * GRID_SIZE + GRID_SIZE + 70, 150, 30);
+
+                    if (firstBtnRect.contains(mousePos) ||
+                        strongBtnRect.contains(mousePos) ||
+                        fastBtnRect.contains(mousePos)) {
+                        clickedOnUpgradeUI = true;
                     }
                 }
             }
         }
 
+        // If clicking outside towers and upgrade UI, deselect everything
         if (!clickedOnTower && !clickedOnUpgradeUI)
         {
             for (auto& t : towers)
             {
                 t->isSelected = false;
                 t->showUpgradeOptions = false;
+                t->showModeOptions = false; // Also reset mode options
             }
         }
         // If clicking on a tower, select it
@@ -1281,6 +1342,7 @@ public:
             {
                 t->isSelected = false;
                 t->showUpgradeOptions = false;
+                t->showModeOptions = false; // Also reset mode options
             }
 
             // Then select the clicked tower
@@ -1353,6 +1415,7 @@ public:
         if (player.getHealth() <= 0)
         {
             isGameover = true;
+            player.setHealth(0);
             return;  // stop all further game updates
         }
 
@@ -1479,11 +1542,28 @@ public:
             dragTower.draw(window);
         }
         player.draw(window);
+
+        static Font font;
+        if (font.loadFromFile("C:/Users/Dell/OneDrive/Desktop/Hatim/DSA/DS_Proj/Clash_Regular.otf")) {
+            Text waveText;
+            waveText.setFont(font);
+            waveText.setString("Wave: " + to_string(currentWave));
+            waveText.setCharacterSize(24);
+            waveText.setFillColor(Color::White);
+            waveText.setStyle(Text::Bold);
+            float shopX = 26 * GRID_SIZE;  // Shop's left edge
+            float textWidth = waveText.getLocalBounds().width;
+
+            waveText.setPosition(shopX - textWidth + 500, 5);
+
+            window.draw(waveText);
+        }
+
         if (isGameover)
         {
             RectangleShape overlay;
             overlay.setSize(Vector2f(window.getSize()));
-            overlay.setFillColor(Color(0, 0, 0, 150));  // 150 = partially see-through
+            overlay.setFillColor(Color(0, 0, 0, 150));
             window.draw(overlay);
 
             static Font font;

@@ -61,7 +61,7 @@ public:
     Player() : money(400), health(200)
     {
         // Load Font
-        if (!font.loadFromFile("C:/Users/admin/Desktop/Project/pac2/ARIAL.TTF"))
+        if (!font.loadFromFile("C:/Users/Dell/OneDrive/Desktop/Hatim/DSA/DS_Proj/Clash_Regular.otf"))
         {
             cout << "Failed to load system font!" << endl;
         }
@@ -100,11 +100,11 @@ public:
 
     void increaseMoney(int g)
     {
-        if (g < 5){
-        money = money + (100 * g);
+        if (g < 5) {
+            money = money + (100 * g);
         }
         else {
-			money += g;
+            money += g;
         }
     }
 
@@ -141,7 +141,7 @@ class Enemy
     stack<PathNode*> smartPath;
 
 public:
-    Enemy(int hp, PathNode* start,  Color c, float moveInterval, bool smart = false) : health(hp), current(start), oghealth(hp), moveInterval(moveInterval), useSmart(smart)
+    Enemy(int hp, PathNode* start, Color c, float moveInterval, bool smart = false) : health(hp), current(start), oghealth(hp), moveInterval(moveInterval), useSmart(smart)
     {
         shape.setRadius(8);
         shape.setFillColor(c);
@@ -223,21 +223,24 @@ class RedEnemy : public Enemy
 {
 public:
     RedEnemy(PathNode* start, bool smart = false)
-        : Enemy(10, start,  Color::Red, 0.15f, smart){}
+        : Enemy(10, start, Color::Red, 0.2f, smart) {
+    }
 };
 
 class BlueEnemy : public Enemy
 {
 public:
     BlueEnemy(PathNode* start, bool smart = false)
-        : Enemy(25, start,  Color::Blue, 0.2f, smart){}
+        : Enemy(25, start, Color::Blue, 0.3f, smart) {
+    }
 };
 
 class GreenEnemy : public Enemy
 {
 public:
     GreenEnemy(PathNode* start, bool smart = false)
-        : Enemy(40, start,  Color::Green, 0.2f, smart){}
+        : Enemy(40, start, Color::Green, 0.3f, smart) {
+    }
 };
 
 
@@ -260,7 +263,7 @@ public:
         : target(targetEnemy), damage(dmg), speed(spd)
     {
         shape.setRadius(GRID_SIZE / 4);
-        shape.setFillColor( Color::Blue);
+        shape.setFillColor(Color::Blue);
         shape.setOrigin(5.f, 5.f);
         shape.setPosition(startPos);
     }
@@ -340,12 +343,14 @@ public:
     vector<Projectile> projectiles;
     float speed;
     bool showUpgradeOptions = false;
+    bool showModeOptions = false;
+    string targetingMode = "First Enemy";
 
     UpgradeNode* root;
     UpgradeNode* current;
 
-     CircleShape shape;
-     CircleShape rangeCircle;
+    CircleShape shape;
+    CircleShape rangeCircle;
 
     Tower(Vector2i coord = Vector2i(0, 0))
     {
@@ -353,17 +358,17 @@ public:
         ;
         damage = 10;
         range = 6 * GRID_SIZE;
-        fireRate = 3.0f;
+        fireRate = 2.0f;
         TowerCost = 150;
         speed = 250.f;
 
         shape.setRadius(GRID_SIZE);
-        shape.setFillColor( Color::Blue);
+        shape.setFillColor(Color::Blue);
         shape.setPosition(pos.x * GRID_SIZE, pos.y * GRID_SIZE);
         shape.setOrigin(GRID_SIZE, GRID_SIZE);
         rangeCircle.setRadius(range);
         rangeCircle.setOrigin(range, range);
-        rangeCircle.setFillColor( Color(0, 0, 255, 50));
+        rangeCircle.setFillColor(Color(0, 0, 255, 50));
         rangeCircle.setPosition(pos.x * GRID_SIZE + GRID_SIZE / 2, pos.y * GRID_SIZE + GRID_SIZE / 2);
 
         buildUpgradeTree();
@@ -375,28 +380,28 @@ public:
         root = new UpgradeNode("Base Tower", 0, 10, 0, 0.0f, 0);
 
         // First tier
-        root->left = new UpgradeNode("Wizard Tower", 50, 15, 50, 0.2f, 10.f);
-        root->right = new UpgradeNode("Ice Tower", 50, 8, 20, 0.3f, 10.f);
+        root->left = new UpgradeNode("Wizard Tower", 50, 12, 30, 0.5f, 10.f);
+        root->right = new UpgradeNode("Ice Tower", 40, 8, 25, 0.4f, 10.f);
 
         // Wizard Tower upgrades
-        root->left->left = new UpgradeNode("Arcane Explosion", 100, 25, 20, 0.15f, 5.f);
-        root->left->right = new UpgradeNode("Cannon Tower", 100, 30, 40, 0.2f, 5.f);
+        root->left->left = new UpgradeNode("Arcane Explosion", 100, 15, 20, 0.3f, 10.f);
+        root->left->right = new UpgradeNode("Cannon Tower", 100, 25, 40, 0.0f, 7.f);
 
         // Cannon Tower upgrades
-        root->left->right->left = new UpgradeNode("Heavy Shot", 150, 50, 30, 0.25f, 5.f);
-        root->left->right->right = new UpgradeNode("Explosive Shell", 150, 45, 50, 0.2f, 5.f);
+        root->left->right->left = new UpgradeNode("Heavy Shot", 150, 20, 15, 0.25f, 5.f);
+        root->left->right->right = new UpgradeNode("Explosive Shell", 200, 25, 20, 0.2f, 5.f);
 
         // Lightning Chain upgrade remains for Wizard
-        root->left->left->left = new UpgradeNode("Lightning Chain", 150, 20, 30, 0.1f, 5.f);
+        root->left->left->left = new UpgradeNode("Lightning Chain", 150, 10, 15, 0.2f, 5.f);
 
         // Ice Tower upgrades
-        root->right->left = new UpgradeNode("Deep Freeze", 100, 5, 25, 0.1f, 5.f);
-        root->right->right = new UpgradeNode("Shatter", 100, 10, 15, 0.1f, 5.f);
+        root->right->left = new UpgradeNode("Deep Freeze", 120, 15, 25, 0.3f, 5.f);
+        root->right->right = new UpgradeNode("Shatter", 100, 10, 15, 0.5f, 5.f);
     }
 
     bool upgrade(UpgradeNode* targetNode, Player player);
 
-	int getTowerCost() { return TowerCost; }
+    int getTowerCost() { return TowerCost; }
 
     int getAvailableUpgrades(UpgradeNode* options[2])
     {
@@ -408,70 +413,127 @@ public:
         return count;
     }
 
-    bool isClicked( Vector2f mousePos)
+    bool isClicked(Vector2f mousePos)
     {
         return shape.getGlobalBounds().contains(mousePos);
     }
 
-    void draw( RenderWindow& window)
-    {
+    void draw(RenderWindow& window) {
         window.draw(shape);
 
-        if (isSelected)
-        {
+        if (isSelected) {
             window.draw(rangeCircle); // draw tower range
 
-            // Draw single upgrade button first
-             RectangleShape upgradeBtn( Vector2f(100, 30));
-            upgradeBtn.setPosition(pos.x * GRID_SIZE, pos.y * GRID_SIZE - 35);
-            upgradeBtn.setFillColor( Color(100, 100, 250));
+            // Draw Upgrade button
+            RectangleShape upgradeBtn(Vector2f(100, 30));
+            upgradeBtn.setPosition(pos.x * GRID_SIZE, pos.y * GRID_SIZE - 70); // Moved up
+            upgradeBtn.setFillColor(Color(100, 100, 250));
 
-             Font font;
-            if (!font.loadFromFile("C:/Windows/Fonts/arial.ttf"))
-            {
-                 cout << "Failed to load system font!" <<  endl;
+            // Draw Mode button
+            RectangleShape modeBtn(Vector2f(100, 30));
+            modeBtn.setPosition(pos.x * GRID_SIZE, pos.y * GRID_SIZE - 35); // Below upgrade button
+            modeBtn.setFillColor(Color(250, 100, 100)); // Different color for mode button
+
+            Font font;
+            if (!font.loadFromFile("C:/Users/Dell/OneDrive/Desktop/Hatim/DSA/DS_Proj/Clash_Regular.otf")) {
+                cout << "Failed to load system font!" << endl;
             }
 
-             Text txt;
-            txt.setFont(font);
-            txt.setString("Upgrade");
-            txt.setCharacterSize(12);
-            txt.setFillColor( Color::White);
-            txt.setPosition(upgradeBtn.getPosition().x + 20, upgradeBtn.getPosition().y + 5);
+            // Upgrade button text
+            Text upgradeTxt;
+            upgradeTxt.setFont(font);
+            upgradeTxt.setString("Upgrade");
+            upgradeTxt.setCharacterSize(12);
+            upgradeTxt.setFillColor(Color::White);
+            upgradeTxt.setPosition(upgradeBtn.getPosition().x + 20, upgradeBtn.getPosition().y + 5);
+
+            // Mode button text
+            Text modeTxt;
+            modeTxt.setFont(font);
+            modeTxt.setString("Mode: " + targetingMode);
+            modeTxt.setCharacterSize(12);
+            modeTxt.setFillColor(Color::White);
+            modeTxt.setPosition(modeBtn.getPosition().x + 10, modeBtn.getPosition().y + 5);
 
             window.draw(upgradeBtn);
-            window.draw(txt);
+            window.draw(upgradeTxt);
+            window.draw(modeBtn);
+            window.draw(modeTxt);
 
-            // Only show upgrade options if the upgrade button was clicked
-            if (showUpgradeOptions)
-            {
+            // Show upgrade options if upgrade button was clicked
+            if (showUpgradeOptions) {
                 UpgradeNode* options[2];
                 int n = getAvailableUpgrades(options);
 
-                for (int i = 0; i < n; i++)
-                {
-                     RectangleShape btn( Vector2f(100, 40));
+                for (int i = 0; i < n; i++) {
+                    RectangleShape btn(Vector2f(100, 40));
                     btn.setPosition(pos.x * GRID_SIZE, pos.y * GRID_SIZE + GRID_SIZE + i * 45);
-                    btn.setFillColor( Color(100, 100, 250));
+                    btn.setFillColor(Color(100, 100, 250));
 
-                     Text optionTxt;
+                    Text optionTxt;
                     optionTxt.setFont(font);
                     optionTxt.setString(options[i]->name + "\nCost: " + to_string(options[i]->UpgradeCost));
                     optionTxt.setCharacterSize(12);
-                    optionTxt.setFillColor( Color::White);
+                    optionTxt.setFillColor(Color::White);
                     optionTxt.setPosition(btn.getPosition().x + 5, btn.getPosition().y + 5);
 
                     window.draw(btn);
                     window.draw(optionTxt);
                 }
             }
+
+            // Show mode options if mode button was clicked
+            if (showModeOptions) {
+                // First enemy option
+                RectangleShape firstBtn(Vector2f(150, 30));
+                firstBtn.setPosition(pos.x * GRID_SIZE - 25, pos.y * GRID_SIZE + GRID_SIZE);
+                firstBtn.setFillColor(Color(100, 200, 100));
+
+                Text firstTxt;
+                firstTxt.setFont(font);
+                firstTxt.setString("First Enemy");
+                firstTxt.setCharacterSize(12);
+                firstTxt.setFillColor(Color::White);
+                firstTxt.setPosition(firstBtn.getPosition().x + 10, firstBtn.getPosition().y + 5);
+
+                // Strongest enemy option
+                RectangleShape strongBtn(Vector2f(150, 30));
+                strongBtn.setPosition(pos.x * GRID_SIZE - 25, pos.y * GRID_SIZE + GRID_SIZE + 35);
+                strongBtn.setFillColor(Color(200, 100, 100));
+
+                Text strongTxt;
+                strongTxt.setFont(font);
+                strongTxt.setString("Strongest Enemy");
+                strongTxt.setCharacterSize(12);
+                strongTxt.setFillColor(Color::White);
+                strongTxt.setPosition(strongBtn.getPosition().x + 10, strongBtn.getPosition().y + 5);
+
+                // Fastest enemy option
+                RectangleShape fastBtn(Vector2f(150, 30));
+                fastBtn.setPosition(pos.x * GRID_SIZE - 25, pos.y * GRID_SIZE + GRID_SIZE + 70);
+                fastBtn.setFillColor(Color(100, 100, 200));
+
+                Text fastTxt;
+                fastTxt.setFont(font);
+                fastTxt.setString("Fastest Enemy");
+                fastTxt.setCharacterSize(12);
+                fastTxt.setFillColor(Color::White);
+                fastTxt.setPosition(fastBtn.getPosition().x + 10, fastBtn.getPosition().y + 5);
+
+                window.draw(firstBtn);
+                window.draw(firstTxt);
+                window.draw(strongBtn);
+                window.draw(strongTxt);
+                window.draw(fastBtn);
+                window.draw(fastTxt);
+            }
         }
 
-        for (auto& p : projectiles)
-        {
+        for (auto& p : projectiles) {
             p.draw(window);
         }
     }
+
     void update(float dt, vector<Enemy*>& enemies, Player& player)
     {
         timer -= dt;
@@ -500,35 +562,105 @@ public:
 
     Enemy* findTarget(const vector<Enemy*>& enemies)
     {
-        for (const auto& e : enemies)
-        {
-            if (!e->isAlive())
-                continue;
+        Enemy* enemy = nullptr;
+        if (targetingMode == "First Enemy") {
+            for (const auto& e : enemies)
+            {
+                if (!e->isAlive())
+                    continue;
 
-            float dist = sqrt(
-                pow(e->getPosition().x - shape.getPosition().x, 2) +
-                pow(e->getPosition().y - shape.getPosition().y, 2));
+                float dist = sqrt(
+                    pow(e->getPosition().x - shape.getPosition().x, 2) +
+                    pow(e->getPosition().y - shape.getPosition().y, 2));
 
-            if (dist <= range)
-                return e;
+                if (dist <= range) {
+                    enemy = e;
+                    break;
+                }
+            }
         }
-        return nullptr;
+        else if (targetingMode == "Strongest Enemy") {
+            int h = 0;
+            for (const auto& e : enemies)
+            {
+                if (!e->isAlive())
+                    continue;
+
+                float dist = sqrt(
+                    pow(e->getPosition().x - shape.getPosition().x, 2) +
+                    pow(e->getPosition().y - shape.getPosition().y, 2));
+
+                if (dist <= range) {
+                    if (e->gethealth() > h) {
+                        enemy = e;
+                        h = e->gethealth();
+                    }
+                }
+            }
+        }
+        else if (targetingMode == "Fastest Enemy") {
+            int f = 0;
+            for (const auto& e : enemies)
+            {
+                if (!e->isAlive())
+                    continue;
+
+                float dist = sqrt(
+                    pow(e->getPosition().x - shape.getPosition().x, 2) +
+                    pow(e->getPosition().y - shape.getPosition().y, 2));
+
+                if (dist <= range) {
+                    if (e->gethealth() > f) {
+                        enemy = e;
+                        f = e->gethealth();
+                    }
+                }
+            }
+        }
+        return enemy;
+    }
+
+    // Function to handle mode button click
+    void toggleModeOptions() {
+        showModeOptions = !showModeOptions;
+        showUpgradeOptions = false; // Close upgrade options if open
+    }
+
+    // Function to set targeting mode
+    void setTargetingMode(string mode) {
+        targetingMode = mode;
+        showModeOptions = false; // Close mode options after selection
+    }
+
+    // Function to check which mode button was clicked
+    string checkModeClick(Vector2f mousePos) {
+        if (!showModeOptions) return "";
+
+        FloatRect firstBtnRect(pos.x * GRID_SIZE - 25, pos.y * GRID_SIZE + GRID_SIZE, 150, 30);
+        FloatRect strongBtnRect(pos.x * GRID_SIZE - 25, pos.y * GRID_SIZE + GRID_SIZE + 35, 150, 30);
+        FloatRect fastBtnRect(pos.x * GRID_SIZE - 25, pos.y * GRID_SIZE + GRID_SIZE + 70, 150, 30);
+
+        if (firstBtnRect.contains(mousePos)) return "First Enemy";
+        if (strongBtnRect.contains(mousePos)) return "Strongest Enemy";
+        if (fastBtnRect.contains(mousePos)) return "Fastest Enemy";
+
+        return "";
     }
 };
 
 class Shop
 {
 public:
-     RectangleShape shopTower;
+    RectangleShape shopTower;
     bool isDragging;
     Shop()
     {
-        shopTower.setSize( Vector2f(GRID_SIZE * PIXEL, GRID_SIZE * PIXEL));
-        shopTower.setFillColor( Color::Red);
+        shopTower.setSize(Vector2f(GRID_SIZE * PIXEL, GRID_SIZE * PIXEL));
+        shopTower.setFillColor(Color::Red);
         shopTower.setPosition(52 * GRID_SIZE, 0); // shop location
         isDragging = false;
     }
-    void draw( RenderWindow& window) { window.draw(shopTower); }
+    void draw(RenderWindow& window) { window.draw(shopTower); }
 };
 
 // ========== Map ==========
@@ -536,9 +668,6 @@ class Map {
     int rows, cols;
     vector<vector<int>> grid;
     vector< RectangleShape> tiles;
-    sf::Texture mapTexture;
-    sf::Sprite mapSprite;
-    bool mapSpriteLoaded = false;
 public:
     Map(int r, int c) : rows(r), cols(c) {
         grid.assign(rows, vector<int>(cols, 0));
@@ -592,28 +721,18 @@ public:
 
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < cols; j++) {
-                 RectangleShape rect( Vector2f(GRID_SIZE, GRID_SIZE));
+                RectangleShape rect(Vector2f(GRID_SIZE, GRID_SIZE));
                 rect.setPosition(j * GRID_SIZE, i * GRID_SIZE);
-                if (grid[i][j] == 0) rect.setFillColor( Color(150, 150, 150)); // path
-                else if (grid[i][j] == 2) rect.setFillColor( Color(0, 0, 0)); // special path
-                else rect.setFillColor( Color(0, 200, 0)); // grass
+                if (grid[i][j] == 0) rect.setFillColor(Color(150, 150, 150)); // path
+                else if (grid[i][j] == 2) rect.setFillColor(Color(0, 0, 0)); // special path
+                else rect.setFillColor(Color(0, 200, 0)); // grass
                 tiles.push_back(rect);
             }
         }
-		
-        if (mapTexture.loadFromFile("C:/Users/umera/Desktop/DSAmap-1-Recovered.png")) {
-            mapSprite.setTexture(mapTexture);
-            mapSprite.setPosition(0, 0); // Make sure it lines up with tiles!
-            mapSpriteLoaded = true;
-        }
     }
 
-
-    void draw( RenderWindow& window) {
-				if (mapSpriteLoaded) {
-			window.draw(mapSprite);
-		}
-       // for (auto& t : tiles) window.draw(t);
+    void draw(RenderWindow& window) {
+        for (auto& t : tiles) window.draw(t);
     }
 
     bool isBuildable(int x, int y) {
@@ -625,8 +744,6 @@ public:
         if (x < 0 || x >= cols || y < 0 || y >= rows) return false;
         return grid[y][x] == 0;
     }
-
-
 };
 
 void buildPathNetwork(PathNode* start, string movement, Map* gameMap) {
@@ -804,8 +921,7 @@ bool Tower::upgrade(UpgradeNode* targetNode, Player player)
         range += targetNode->rangeBoost;
         fireRate -= targetNode->fireRateBoost;
         speed += targetNode->speedBoost;
-
-		current = targetNode;
+        current = targetNode;
 
         rangeCircle.setRadius(range);
         rangeCircle.setOrigin(range, range);
@@ -1008,14 +1124,15 @@ class GameManager
     vector<Tower*> towers;
     vector<Enemy*> enemies;
     PathNode* pathHead;
-     Clock clock;
+    Clock clock;
     float enemyMoveTimer;
+    bool isGameover;
 
     vector<int> wavePattern;
     int maxEnemies = 0;
     int enemiesSpawned = 0;
     float spawnTimer = 0.0f;
-    float spawnDelay = 0.7f;
+    float spawnDelay = 0.5f;
     float wavePauseTimer = 0.0f;
     float wavePauseDuration = 0.002f;
     bool waveActive = true;
@@ -1042,7 +1159,12 @@ public:
         pathHead = start;
     }
 
-    void checkShopDrag( Vector2f coord, bool clicked)
+    bool isGameOver() const
+    {
+        return isGameover;
+    }
+
+    void checkShopDrag(Vector2f coord, bool clicked)
     {
         if (shop.isDragging && !clicked)
         {
@@ -1069,6 +1191,26 @@ public:
         }
     }
 
+    void checkModeClick(sf::Vector2f mousePos) {
+        for (auto& t : towers) {
+            if (t->isSelected) {
+                // Check if clicking mode button
+                FloatRect modeBtnRect(t->pos.x * GRID_SIZE, t->pos.y * GRID_SIZE - 35, 100, 30);
+                if (modeBtnRect.contains(mousePos)) {
+                    t->toggleModeOptions();
+                    return;
+                }
+
+                // Check if clicking mode options
+                string mode = t->checkModeClick(mousePos);
+                if (!mode.empty()) {
+                    t->setTargetingMode(mode);
+                    return;
+                }
+            }
+        }
+    }
+
     void updateSmartEnemyPaths()
     {
         Coordinate goal = { 0, 10 };
@@ -1085,7 +1227,7 @@ public:
             }
         }
     }
-    void checkTowerClick( Vector2f mousePos)
+    void checkTowerClick(Vector2f mousePos)
     {
         bool clickedOnTower = false;
         bool clickedOnUpgradeUI = false;
@@ -1101,7 +1243,7 @@ public:
             // Check if clicking on upgrade button
             if (t->isSelected)
             {
-                FloatRect upgradeBtnRect(t->pos.x * GRID_SIZE, t->pos.y * GRID_SIZE - 35, 100, 30);
+                FloatRect upgradeBtnRect(t->pos.x * GRID_SIZE, t->pos.y * GRID_SIZE - 70, 100, 30);
                 if (upgradeBtnRect.contains(mousePos))
                 {
                     clickedOnUpgradeUI = true;
@@ -1114,9 +1256,8 @@ public:
                     int n = t->getAvailableUpgrades(options);
                     for (int i = 0; i < n; i++)
                     {
-                        FloatRect btnRect(t->pos.x * GRID_SIZE, t->pos.y * GRID_SIZE + GRID_SIZE + i * 45, 100, 40);
-                        if (btnRect.contains(mousePos))
-                        {
+                        FloatRect modeBtnRect(t->pos.x * GRID_SIZE, t->pos.y * GRID_SIZE - 35, 100, 30);
+                        if (modeBtnRect.contains(mousePos)) {
                             clickedOnUpgradeUI = true;
                         }
                     }
@@ -1154,17 +1295,17 @@ public:
         }
     }
 
-    void checkUpgradeClick( Vector2f mousePos)
+    void checkUpgradeClick(Vector2f mousePos)
     {
         for (auto& t : towers)
         {
             if (t->isSelected)
             {
-                FloatRect upgradeBtnRect(t->pos.x * GRID_SIZE, t->pos.y * GRID_SIZE - 35, 100, 30);
-                if (upgradeBtnRect.contains(mousePos))
-                {
-                    t->showUpgradeOptions = !t->showUpgradeOptions; // Toggle upgrade options
-                    return;                                         // Return early so we don't process tower click
+                FloatRect upgradeBtnRect(t->pos.x * GRID_SIZE, t->pos.y * GRID_SIZE - 70, 100, 30);
+                if (upgradeBtnRect.contains(mousePos)) {
+                    t->showUpgradeOptions = !t->showUpgradeOptions;  // Toggle upgrade options
+                    t->showModeOptions = false;  // Close mode options if open
+                    return;  // Return early
                 }
                 if (t->showUpgradeOptions)
                 {
@@ -1185,7 +1326,7 @@ public:
         }
     }
 
-    void update(Vector2f mousePos, float dt, float dtt)
+    void update(Vector2f mousePos, float dt)
     {
 
         vector<Enemy*> reachedEnd;
@@ -1209,8 +1350,17 @@ public:
             delete e;
         }
 
-        for (auto& e : enemies)
-            e->update(dt);
+        if (player.getHealth() <= 0)
+        {
+            isGameover = true;
+            return;  // stop all further game updates
+        }
+
+        if (!isGameover)
+        {
+            for (auto& e : enemies)
+                e->update(dt);
+        }
 
         // -------- SPAWN LOGIC with CHECKS --------
         if (waveActive && maxEnemies > 0 && enemiesSpawned < maxEnemies)
@@ -1278,9 +1428,8 @@ public:
 
         wavePattern.clear();
 
-        //if (currentWave == 1)
-            for (int i = 0; i < 10; ++i)
-                wavePattern.push_back(0);
+        for (int i = 0; i < 7; ++i)
+            wavePattern.push_back(0);
 
         if (currentWave == 2)
         {
@@ -1317,7 +1466,7 @@ public:
         currentWave++; // increment wave for the next start
     }
 
-    void draw( RenderWindow& window)
+    void draw(RenderWindow& window)
     {
         gameMap->draw(window);
         shop.draw(window);
@@ -1330,6 +1479,30 @@ public:
             dragTower.draw(window);
         }
         player.draw(window);
+        if (isGameover)
+        {
+            RectangleShape overlay;
+            overlay.setSize(Vector2f(window.getSize()));
+            overlay.setFillColor(Color(0, 0, 0, 150));  // 150 = partially see-through
+            window.draw(overlay);
+
+            static Font font;
+            font.loadFromFile("C:/Users/Dell/OneDrive/Desktop/Hatim/DSA/DS_Proj/Clash_Regular.otf");
+
+            Text txt;
+            txt.setFont(font);
+            txt.setString("GAME OVER!");
+            txt.setCharacterSize(120);
+            txt.setFillColor(Color::White);
+            txt.setOutlineThickness(5);
+            txt.setOutlineColor(Color::Black);
+
+            FloatRect bounds = txt.getLocalBounds();
+            txt.setOrigin(bounds.width / 2, bounds.height / 2);
+            txt.setPosition(window.getSize().x / 2, window.getSize().y / 2);
+
+            window.draw(txt);
+        }
     }
 
     friend class Player;
@@ -1338,42 +1511,41 @@ public:
 // ========== MAIN ==========
 int main()
 {
-     RenderWindow window( VideoMode(52 * GRID_SIZE + PIXEL * GRID_SIZE, 36 * GRID_SIZE), "Tower Defense Game");
+    RenderWindow window(VideoMode(52 * GRID_SIZE + PIXEL * GRID_SIZE, 36 * GRID_SIZE), "Tower Defense Game");
     window.setFramerateLimit(60);
 
     GameManager game;
     Clock clock;
 
-    float dtt = clock.getElapsedTime().asSeconds();
-
     while (window.isOpen())
     {
-         Event event;
+        Event event;
         float dt = clock.restart().asSeconds();
         while (window.pollEvent(event))
         {
-            if (event.type ==  Event::Closed)
+            if (event.type == Event::Closed)
                 window.close();
 
             // Mouse press: begin drag if clicked on the shop item
-            if (event.type ==  Event::MouseButtonPressed &&
-                event.mouseButton.button ==  Mouse::Left)
+            if (event.type == Event::MouseButtonPressed &&
+                event.mouseButton.button == Mouse::Left)
             {
-                 Vector2f mousePos = window.mapPixelToCoords( Mouse::getPosition(window));
+                Vector2f mousePos = window.mapPixelToCoords(Mouse::getPosition(window));
                 game.checkUpgradeClick(mousePos);
+                game.checkModeClick(mousePos);
                 game.checkTowerClick(mousePos);
                 game.checkShopDrag(mousePos, true);
             }
 
             // Mouse release: drop tower
-            if (event.type ==  Event::MouseButtonReleased &&
-                event.mouseButton.button ==  Mouse::Left)
+            if (event.type == Event::MouseButtonReleased &&
+                event.mouseButton.button == Mouse::Left)
             {
                 game.checkShopDrag({ 0, 0 }, false);
             }
         }
 
-        game.update(window.mapPixelToCoords( Mouse::getPosition(window)), dt, dtt);
+        game.update(window.mapPixelToCoords(Mouse::getPosition(window)), dt);
 
         window.clear();
         game.draw(window);

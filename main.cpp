@@ -1567,7 +1567,7 @@ public:
             window.draw(overlay);
 
             static Font font;
-            font.loadFromFile("C:/Users/Dell/OneDrive/Desktop/Hatim/DSA/DS_Proj/Clash_Regular.otf");
+            font.loadFromFile("C:/Windows/Fonts/arial.ttf");
 
             Text txt;
             txt.setFont(font);

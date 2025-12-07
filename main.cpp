@@ -5,7 +5,8 @@
 using namespace std;
 using namespace sf;
 
-#define GRID_SIZE 30
+#define GRID_SIZE 20
+#define PIXEL 4
 
 // ========== Coordinate ==========
 struct Coordinate {
@@ -253,7 +254,7 @@ public:
             upgradeBtn.setFillColor(sf::Color(100, 100, 250));
 
             sf::Font font;
-            if (!font.loadFromFile("C:/Windows/Fonts/arial.ttf")) {
+            if (!font.loadFromFile("C:/Windows/Fonts/Berlin Sans FB.ttf")) {
                 std::cout << "Failed to load system font!" << std::endl;
             }
 
@@ -294,6 +295,7 @@ public:
             p.draw(window);
         }
 	}
+
     void update(float dt, vector<Enemy*>& enemies) {
         timer -= dt;
         Enemy* target;
@@ -337,9 +339,9 @@ public:
     sf::RectangleShape shopTower;
     bool isDragging;
     Shop() {
-        shopTower.setSize(sf::Vector2f(GRID_SIZE * 3, GRID_SIZE * 3));
+        shopTower.setSize(sf::Vector2f(GRID_SIZE * 4, GRID_SIZE * 4));
         shopTower.setFillColor(sf::Color::Red);
-        shopTower.setPosition(39 * GRID_SIZE, 0);  // shop location
+        shopTower.setPosition(52 * GRID_SIZE, 0);  // shop location
         isDragging = false;
     }
     void draw(sf::RenderWindow& window) { window.draw(shopTower); }
@@ -355,41 +357,50 @@ public:
         grid.assign(rows, vector<int>(cols, 0));
         // Manually mark the path based on your image
         grid = {
-            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
 
-            {1, 1, 1, 2, 2, 2, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-            {1, 1, 1, 2, 2, 2, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-            {1, 1, 1, 2, 2, 2, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+            {1, 1, 1, 1, 2, 2, 2, 2, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+            {1, 1, 1, 1, 2, 2, 2, 2, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+            {1, 1, 1, 1, 2, 2, 2, 2, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+            {1, 1, 1, 1, 2, 2, 2, 2, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
 
-            {0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1},
-            {0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1},
-            {0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1},
+            {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1},
+            {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1},
+            {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1},
+            {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1},
 
-            {1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1},
-            {1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1},
-            {1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1},
+            {1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1},
+            {1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1},
+            {1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1},
+            {1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1},
 
-            {1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 2, 2, 2, 1, 1, 1},
-            {1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 2, 2, 2, 1, 1, 1},
-            {1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 2, 2, 2, 1, 1, 1},
+            {1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 2, 2, 2, 2, 1, 1, 1, 1},
+            {1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 2, 2, 2, 2, 1, 1, 1, 1},
+            {1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 2, 2, 2, 2, 1, 1, 1, 1},
+            {1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 2, 2, 2, 2, 1, 1, 1, 1},
 
-            {1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1},
-            {1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1},
-            {1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1},
+            {1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1},
+            {1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1},
+            {1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1},
+            {1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1},
 
-            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1},
-            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1},
-            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1},
+            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1},
+            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1},
+            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1},
+            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1},
 
-            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1},
-            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1},
-            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1},
+            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1},
+            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1},
+            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1},
+            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1},
 
-            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1},
-            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1},
-            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1}
+            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1},
+            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1},
+            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1},
+            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1},
         };
 
         for (int i = 0; i < rows; i++) {
@@ -422,123 +433,147 @@ public:
 void buildPathNetwork(PathNode* start, string movement, Map* gameMap) {
     // Implement path network building logic here if needed
     if (movement == "UP") {
-        if (gameMap->isPath(start->pos.x, start->pos.y - 3)) {
+        if (gameMap->isPath(start->pos.x, start->pos.y - PIXEL)) {
             PathNode* next = new PathNode({ start->pos.x, start->pos.y - 1 });
             start->front = next;
             PathNode* next2 = new PathNode({ start->pos.x, start->pos.y - 2 });
             next->front = next2;
             PathNode* next3 = new PathNode({ start->pos.x, start->pos.y - 3 });
             next2->front = next3;
-            buildPathNetwork(next3, movement, gameMap);
+            PathNode* next4 = new PathNode({ start->pos.x, start->pos.y - PIXEL });
+            next3->front = next4;
+            buildPathNetwork(next4, movement, gameMap);
         }
-        if (gameMap->isPath(start->pos.x - 3, start->pos.y)) {
+        if (gameMap->isPath(start->pos.x - PIXEL, start->pos.y)) {
             PathNode* next = new PathNode({ start->pos.x - 1, start->pos.y });
             start->left = next;
             PathNode* next2 = new PathNode({ start->pos.x - 2, start->pos.y });
             next->front = next2;
             PathNode* next3 = new PathNode({ start->pos.x - 3, start->pos.y });
             next2->front = next3;
-            buildPathNetwork(next3, "LEFT", gameMap);
+            PathNode* next4 = new PathNode({ start->pos.x - PIXEL, start->pos.y });
+            next3->front = next4;
+            buildPathNetwork(next4, "LEFT", gameMap);
         }
-        if (gameMap->isPath(start->pos.x + 3, start->pos.y) &&
-            (start->pos.x != 4 || start->pos.y != 10) &&
-            (start->pos.x != 13 || start->pos.y != 16)) {
+        if (gameMap->isPath(start->pos.x + PIXEL, start->pos.y) &&
+            (start->pos.x != 6 || start->pos.y != 14) &&
+            (start->pos.x != 18 || start->pos.y != 22)) {
             PathNode* next = new PathNode({ start->pos.x + 1, start->pos.y });
             start->right = next;
             PathNode* next2 = new PathNode({ start->pos.x + 2, start->pos.y });
             next->front = next2;
             PathNode* next3 = new PathNode({ start->pos.x + 3, start->pos.y });
             next2->front = next3;
-            buildPathNetwork(next3, "RIGHT", gameMap);
+            PathNode* next4 = new PathNode({ start->pos.x + PIXEL, start->pos.y });
+            next3->front = next4;
+            buildPathNetwork(next4, "RIGHT", gameMap);
         }
     }
     if (movement == "LEFT") {
-        if (gameMap->isPath(start->pos.x, start->pos.y - 3)) {
+        if (gameMap->isPath(start->pos.x, start->pos.y - PIXEL)) {
             PathNode* next = new PathNode({ start->pos.x, start->pos.y - 1 });
             start->front = next;
             PathNode* next2 = new PathNode({ start->pos.x, start->pos.y - 2 });
             next->front = next2;
             PathNode* next3 = new PathNode({ start->pos.x, start->pos.y - 3 });
             next2->front = next3;
-            buildPathNetwork(next3, "UP", gameMap);
+            PathNode* next4 = new PathNode({ start->pos.x, start->pos.y - PIXEL });
+            next3->front = next4;
+            buildPathNetwork(next4, "UP", gameMap);
         }
-        if (gameMap->isPath(start->pos.x - 3, start->pos.y)) {
+        if (gameMap->isPath(start->pos.x - PIXEL, start->pos.y)) {
             PathNode* next = new PathNode({ start->pos.x - 1, start->pos.y });
             start->left = next;
             PathNode* next2 = new PathNode({ start->pos.x - 2, start->pos.y });
             next->front = next2;
             PathNode* next3 = new PathNode({ start->pos.x - 3, start->pos.y });
             next2->front = next3;
-            buildPathNetwork(next3, movement, gameMap);
+            PathNode* next4 = new PathNode({ start->pos.x - PIXEL, start->pos.y });
+            next3->front = next4;
+            buildPathNetwork(next4, movement, gameMap);
         }
-        if (gameMap->isPath(start->pos.x, start->pos.y + 3) &&
-            (start->pos.x != 4 || start->pos.y != 10) &&
-            (start->pos.x != 13 || start->pos.y != 16)) {
+        if (gameMap->isPath(start->pos.x, start->pos.y + PIXEL) &&
+            (start->pos.x != 6 || start->pos.y != 14) &&
+            (start->pos.x != 18 || start->pos.y != 22)) {
             PathNode* next = new PathNode({ start->pos.x, start->pos.y + 1 });
             start->right = next;
             PathNode* next2 = new PathNode({ start->pos.x, start->pos.y + 2 });
             next->front = next2;
             PathNode* next3 = new PathNode({ start->pos.x, start->pos.y + 3 });
             next2->front = next3;
-            buildPathNetwork(next3, "DOWN", gameMap);
+            PathNode* next4 = new PathNode({ start->pos.x, start->pos.y + PIXEL });
+            next3->front = next4;
+            buildPathNetwork(next4, "DOWN", gameMap);
         }
     }
     if (movement == "RIGHT") {
-        if (gameMap->isPath(start->pos.x, start->pos.y - 3)) {
+        if (gameMap->isPath(start->pos.x, start->pos.y - PIXEL)) {
             PathNode* next = new PathNode({ start->pos.x, start->pos.y - 1 });
             start->front = next;
             PathNode* next2 = new PathNode({ start->pos.x, start->pos.y - 2 });
             next->front = next2;
             PathNode* next3 = new PathNode({ start->pos.x, start->pos.y - 3 });
             next2->front = next3;
-            buildPathNetwork(next3, "UP", gameMap);
+            PathNode* next4 = new PathNode({ start->pos.x, start->pos.y - PIXEL });
+            next3->front = next4;
+            buildPathNetwork(next4, "UP", gameMap);
         }
-        if (gameMap->isPath(start->pos.x, start->pos.y + 3)) {
+        if (gameMap->isPath(start->pos.x, start->pos.y + PIXEL)) {
             PathNode* next = new PathNode({ start->pos.x, start->pos.y + 1 });
             start->right = next;
             PathNode* next2 = new PathNode({ start->pos.x, start->pos.y + 2 });
             next->front = next2;
             PathNode* next3 = new PathNode({ start->pos.x, start->pos.y + 3 });
             next2->front = next3;
-            buildPathNetwork(next3, "DOWN", gameMap);
+            PathNode* next4 = new PathNode({ start->pos.x, start->pos.y + PIXEL });
+            next3->front = next4;
+            buildPathNetwork(next4, "DOWN", gameMap);
         }
-        if (gameMap->isPath(start->pos.x + 3, start->pos.y)) {
+        if (gameMap->isPath(start->pos.x + PIXEL, start->pos.y)) {
             PathNode* next = new PathNode({ start->pos.x + 1, start->pos.y });
             start->right = next;
             PathNode* next2 = new PathNode({ start->pos.x + 2, start->pos.y });
             next->front = next2;
             PathNode* next3 = new PathNode({ start->pos.x + 3, start->pos.y });
             next2->front = next3;
-            buildPathNetwork(next3, movement, gameMap);
+            PathNode* next4 = new PathNode({ start->pos.x + PIXEL, start->pos.y });
+            next3->front = next4;
+            buildPathNetwork(next4, movement, gameMap);
         }
     }
     if (movement == "DOWN") {
-        if (gameMap->isPath(start->pos.x, start->pos.y + 3)) {
+        if (gameMap->isPath(start->pos.x, start->pos.y + PIXEL)) {
             PathNode* next = new PathNode({ start->pos.x, start->pos.y + 1 });
             start->right = next;
             PathNode* next2 = new PathNode({ start->pos.x, start->pos.y + 2 });
             next->front = next2;
             PathNode* next3 = new PathNode({ start->pos.x, start->pos.y + 3 });
             next2->front = next3;
-            buildPathNetwork(next3, movement, gameMap);
+            PathNode* next4 = new PathNode({ start->pos.x, start->pos.y + PIXEL });
+            next3->front = next4;
+            buildPathNetwork(next4, movement, gameMap);
         }
-        if (gameMap->isPath(start->pos.x - 3, start->pos.y)) {
+        if (gameMap->isPath(start->pos.x - PIXEL, start->pos.y)) {
             PathNode* next = new PathNode({ start->pos.x - 1, start->pos.y });
             start->left = next;
             PathNode* next2 = new PathNode({ start->pos.x - 2, start->pos.y });
             next->front = next2;
             PathNode* next3 = new PathNode({ start->pos.x - 3, start->pos.y });
             next2->front = next3;
-            buildPathNetwork(next3, "LEFT", gameMap);
+            PathNode* next4 = new PathNode({ start->pos.x - PIXEL, start->pos.y });
+            next3->front = next4;
+            buildPathNetwork(next4, "LEFT", gameMap);
         }
-        if (gameMap->isPath(start->pos.x + 3, start->pos.y)) {
+        if (gameMap->isPath(start->pos.x + PIXEL, start->pos.y)) {
             PathNode* next = new PathNode({ start->pos.x + 1, start->pos.y });
             start->right = next;
             PathNode* next2 = new PathNode({ start->pos.x + 2, start->pos.y });
             next->front = next2;
             PathNode* next3 = new PathNode({ start->pos.x + 3, start->pos.y });
             next2->front = next3;
-            buildPathNetwork(next3, "RIGHT", gameMap);
+            PathNode* next4 = new PathNode({ start->pos.x + PIXEL, start->pos.y });
+            next3->front = next4;
+            buildPathNetwork(next4, "RIGHT", gameMap);
         }
     }
 }
@@ -555,12 +590,12 @@ class GameManager {
     float enemyMoveTimer;
 public:
     GameManager() {
-        gameMap = new Map(27, 39);
+        gameMap = new Map(36, 52);
         enemyMoveTimer = 0;
 
         // Build the path network
-        PathNode* start = new PathNode({ 31,26 });
-        PathNode* second = new PathNode({ 31,25 });
+        PathNode* start = new PathNode({ 42,35 });
+        PathNode* second = new PathNode({ 42,34 });
         start->front = second;
         buildPathNetwork(second, "UP", gameMap);
 
@@ -706,7 +741,7 @@ public:
 
 // ========== MAIN ==========
 int main() {
-    sf::RenderWindow window(sf::VideoMode(39 * GRID_SIZE + 3 * GRID_SIZE, 27 * GRID_SIZE), "Tower Defense - SFML Demo");
+    sf::RenderWindow window(sf::VideoMode(52 * GRID_SIZE + 4 * GRID_SIZE, 36 * GRID_SIZE), "Tower Defense - SFML Demo");
     window.setFramerateLimit(60);
 
     GameManager game;

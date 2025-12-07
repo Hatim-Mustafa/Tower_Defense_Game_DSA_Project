@@ -223,21 +223,21 @@ class RedEnemy : public Enemy
 {
 public:
     RedEnemy(PathNode* start, bool smart = false)
-        : Enemy(10, start,  Color::Red, 0.2f, smart){}
+        : Enemy(10, start,  Color::Red, 0.15f, smart){}
 };
 
 class BlueEnemy : public Enemy
 {
 public:
     BlueEnemy(PathNode* start, bool smart = false)
-        : Enemy(25, start,  Color::Blue, 0.3f, smart){}
+        : Enemy(25, start,  Color::Blue, 0.2f, smart){}
 };
 
 class GreenEnemy : public Enemy
 {
 public:
     GreenEnemy(PathNode* start, bool smart = false)
-        : Enemy(40, start,  Color::Green, 0.3f, smart){}
+        : Enemy(40, start,  Color::Green, 0.2f, smart){}
 };
 
 
@@ -536,6 +536,9 @@ class Map {
     int rows, cols;
     vector<vector<int>> grid;
     vector< RectangleShape> tiles;
+    sf::Texture mapTexture;
+    sf::Sprite mapSprite;
+    bool mapSpriteLoaded = false;
 public:
     Map(int r, int c) : rows(r), cols(c) {
         grid.assign(rows, vector<int>(cols, 0));
@@ -597,10 +600,20 @@ public:
                 tiles.push_back(rect);
             }
         }
+		
+        if (mapTexture.loadFromFile("C:/Users/umera/Desktop/DSAmap-1-Recovered.png")) {
+            mapSprite.setTexture(mapTexture);
+            mapSprite.setPosition(0, 0); // Make sure it lines up with tiles!
+            mapSpriteLoaded = true;
+        }
     }
 
+
     void draw( RenderWindow& window) {
-        for (auto& t : tiles) window.draw(t);
+				if (mapSpriteLoaded) {
+			window.draw(mapSprite);
+		}
+       // for (auto& t : tiles) window.draw(t);
     }
 
     bool isBuildable(int x, int y) {
@@ -612,6 +625,8 @@ public:
         if (x < 0 || x >= cols || y < 0 || y >= rows) return false;
         return grid[y][x] == 0;
     }
+
+
 };
 
 void buildPathNetwork(PathNode* start, string movement, Map* gameMap) {
@@ -1000,7 +1015,7 @@ class GameManager
     int maxEnemies = 0;
     int enemiesSpawned = 0;
     float spawnTimer = 0.0f;
-    float spawnDelay = 0.5f;
+    float spawnDelay = 0.7f;
     float wavePauseTimer = 0.0f;
     float wavePauseDuration = 0.002f;
     bool waveActive = true;

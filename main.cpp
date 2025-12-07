@@ -90,14 +90,14 @@ public:
 class BlueEnemy : public Enemy {
 public:
     BlueEnemy(PathNode* start)
-        : Enemy(25, start, sf::Color::Blue,0.3f) {
+        : Enemy(25, start, sf::Color::Blue,0.2f) {
     }
 };
 
 class GreenEnemy : public Enemy {
 public:
     GreenEnemy(PathNode* start)
-        : Enemy(40, start, sf::Color::Green, 0.35f) {
+        : Enemy(40, start, sf::Color::Green, 0.2f) {
     }
 };
 

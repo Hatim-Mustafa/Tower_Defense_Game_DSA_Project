@@ -143,13 +143,36 @@ class Enemy
     float moveInterval;
     bool useSmart;
     stack<PathNode*> smartPath;
+    Sprite EnemySprite;        
+    Texture EnemyTexture;
+    int frameCount;
+    int currentFrame = 0;
+    float animationTimer = 0;
+    float animationSpeed = 0.15f; // seconds per frame (adjust)
+    int frameWidth;
+    int frameHeight;
 
 public:
-    Enemy(int hp, PathNode* start, Color c, float moveInterval, bool smart = false) : health(hp), current(start), oghealth(hp), moveInterval(moveInterval), useSmart(smart)
+	Enemy(int hp, PathNode* start, const string& TexturePath, float setScale_x, float setScale_y,
+		int frameW, int frameH, int frames,
+        float moveInterval, bool smart = false)
+        : health(hp), current(start), oghealth(hp),
+        moveInterval(moveInterval), useSmart(smart),
+        frameWidth(frameW), frameHeight(frameH), frameCount(frames)
     {
-        shape.setRadius(8);
-        shape.setFillColor(c);
-        shape.setPosition(start->pos.x * GRID_SIZE, start->pos.y * GRID_SIZE);
+        //shape.setRadius(8);
+        //shape.setFillColor(c);
+        //shape.setPosition(start->pos.x * GRID_SIZE, start->pos.y * GRID_SIZE);
+
+        if (!EnemyTexture.loadFromFile(TexturePath)) {
+            cout << "Failed to load enemy texture: " << TexturePath << endl;
+        }
+
+        EnemySprite.setTexture(EnemyTexture);
+        EnemySprite.setScale(setScale_x, setScale_y); // Adjust size as needed
+
+        EnemySprite.setTextureRect(IntRect(0, 0, frameWidth, frameHeight));
+        EnemySprite.setPosition(start->pos.x * GRID_SIZE, start->pos.y * GRID_SIZE);
     }
 
     void setSmartPath(stack<PathNode*> path)
@@ -164,7 +187,7 @@ public:
             // Use smart path
             current = smartPath.top();
             smartPath.pop();
-            shape.setPosition(current->pos.x * GRID_SIZE, current->pos.y * GRID_SIZE);
+            EnemySprite.setPosition(current->pos.x * GRID_SIZE, current->pos.y * GRID_SIZE);
         }
         else if (!useSmart)
         {
@@ -172,18 +195,36 @@ public:
             if (current && current->front)
             {
                 current = current->front;
-                shape.setPosition(current->pos.x * GRID_SIZE, current->pos.y * GRID_SIZE);
+                EnemySprite.setPosition(current->pos.x * GRID_SIZE, current->pos.y * GRID_SIZE);
             }
             else if (current && current->left)
             {
                 current = current->left;
-                shape.setPosition(current->pos.x * GRID_SIZE, current->pos.y * GRID_SIZE);
+                EnemySprite.setPosition(current->pos.x * GRID_SIZE, current->pos.y * GRID_SIZE);
             }
             else if (current && current->right)
             {
                 current = current->right;
-                shape.setPosition(current->pos.x * GRID_SIZE, current->pos.y * GRID_SIZE);
+                EnemySprite.setPosition(current->pos.x * GRID_SIZE, current->pos.y * GRID_SIZE);
             }
+        }
+    }
+
+    void updateAnimation(float dt)
+    {
+        animationTimer += dt;
+
+        if (animationTimer >= animationSpeed)
+        {
+            animationTimer = 0;
+            currentFrame = (currentFrame + 1) % frameCount;
+
+            EnemySprite.setTextureRect(IntRect(
+                currentFrame * frameWidth,
+                0,
+                frameWidth,
+                frameHeight
+            ));
         }
     }
 
@@ -191,6 +232,9 @@ public:
     {
         if (!alive)
             return;
+
+		updateAnimation(dt);
+
         moveProgress += dt;
         if (moveProgress >= moveInterval /* or based on speed */)
         {
@@ -199,7 +243,7 @@ public:
         }
     }
 
-    Vector2f getPosition() { return shape.getPosition(); }
+    Vector2f getPosition() { return EnemySprite.getPosition(); }
 
     void takeDamage(int dmg, Player& player)
     {
@@ -219,7 +263,8 @@ public:
     bool isAlive() { return alive; }
     int gethealth() { return health; }
     float getRadius() { return shape.getRadius(); }
-    void draw(RenderWindow& window) { window.draw(shape); }
+    void draw(RenderWindow& window)
+    { window.draw(EnemySprite); }
     PathNode* getCurrentNode() { return current; }
 };
 
@@ -227,7 +272,8 @@ class RedEnemy : public Enemy
 {
 public:
     RedEnemy(PathNode* start, bool smart = false)
-        : Enemy(10, start, Color::Red, 0.15f, smart) {
+        : Enemy(10, start, "C:/Users/umera/Desktop/animatedredenemy.png",1.25f,1.25f, 30, 32, 4, 0.1f, smart) {
+
     }
 };
 
@@ -235,7 +281,7 @@ class BlueEnemy : public Enemy
 {
 public:
     BlueEnemy(PathNode* start, bool smart = false)
-        : Enemy(25, start, Color::Blue, 0.2f, smart) {
+        : Enemy(25, start, "C:/Users/umera/Desktop/frogbluenemy.png", 1.25f, 1.25f, 40, 40, 6, 0.15f, smart) {
     }
 };
 
@@ -243,10 +289,9 @@ class GreenEnemy : public Enemy
 {
 public:
     GreenEnemy(PathNode* start, bool smart = false)
-        : Enemy(40, start, Color::Green, 0.2f, smart) {
+        : Enemy(40, start, "C:/Users/umera/Desktop/animatedgreenenemy.png", 0.8f, 0.8f, 58, 45, 4, 0.15f, smart) {
     }
 };
-
 
 void Player::updateHealth(Enemy& E)
 {
@@ -810,8 +855,8 @@ void buildPathNetwork(PathNode* start, string movement, Map* gameMap) {
             buildPathNetwork(next4, "LEFT", gameMap);
         }
         if (gameMap->isPath(start->pos.x + PIXEL, start->pos.y) &&
-            (start->pos.x != 6 || start->pos.y != 14) &&
-            (start->pos.x != 18 || start->pos.y != 22)) {
+            (start->pos.x != 5 || start->pos.y != 14) &&
+            (start->pos.x != 17 || start->pos.y != 22)) {
             pathFound = true;
             PathNode* next = new PathNode({ start->pos.x + 1, start->pos.y });
             start->right = next;
@@ -850,8 +895,8 @@ void buildPathNetwork(PathNode* start, string movement, Map* gameMap) {
             buildPathNetwork(next4, movement, gameMap);
         }
         if (gameMap->isPath(start->pos.x, start->pos.y + PIXEL) &&
-            (start->pos.x != 6 || start->pos.y != 14) &&
-            (start->pos.x != 18 || start->pos.y != 22)) {
+            (start->pos.x != 5 || start->pos.y != 14) &&
+            (start->pos.x != 17 || start->pos.y != 22)) {
             pathFound = true;
             PathNode* next = new PathNode({ start->pos.x, start->pos.y + 1 });
             start->right = next;
@@ -943,8 +988,8 @@ void buildPathNetwork(PathNode* start, string movement, Map* gameMap) {
     if (!pathFound) {
         PathNode* end = new PathNode({ start->pos.x - 1, start->pos.y });
         start->front = end;
-        PathNode* end2 = new PathNode({ start->pos.x - 2, start->pos.y });
-        end->front = end2;
+        //PathNode* end2 = new PathNode({ start->pos.x - 2, start->pos.y });
+        //end->front = end2;
     }
 }
 
@@ -1186,8 +1231,8 @@ public:
         enemyMoveTimer = 0;
 
         // Build the path network
-        PathNode* start = new PathNode({ 42, 35 });
-        PathNode* second = new PathNode({ 42, 34 });
+        PathNode* start = new PathNode({ 41, 35 });
+        PathNode* second = new PathNode({ 41, 34 });
         start->front = second;
         buildPathNetwork(second, "UP", gameMap);
 
@@ -1506,7 +1551,7 @@ public:
             //   wavePattern.push_back(0);
             for (int i = 0; i < 5; ++i)
                 wavePattern.push_back(1);
-            for (int i = 0; i < 10; ++i)
+            for (int i = 0; i < 5; ++i)
                 wavePattern.push_back(2);
         }
 
@@ -1514,7 +1559,7 @@ public:
         {
             // for (int i = 0; i < 5; ++i)
             //   wavePattern.push_back(0);
-            for (int i = 0; i < 10; ++i)
+            for (int i = 0; i < 5; ++i)
                 wavePattern.push_back(1);
             for (int i = 0; i < 10; ++i)
                 wavePattern.push_back(2);

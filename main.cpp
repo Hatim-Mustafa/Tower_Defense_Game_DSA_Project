@@ -818,7 +818,7 @@ public:
 
         wavePattern.clear();
 
-        if (currentWave == 1)
+        //if (currentWave == 1)
             for (int i = 0; i < 10; ++i) wavePattern.push_back(0);
 
         if (currentWave == 2) {

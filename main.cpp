@@ -272,7 +272,7 @@ class RedEnemy : public Enemy
 {
 public:
     RedEnemy(PathNode* start, bool smart = false)
-        : Enemy(10, start, "C:/Users/umera/Desktop/animatedredenemy.png",1.25f,1.25f, 30, 32, 4, 0.1f, smart) {
+        : Enemy(10, start, "C:/Users/Dell/OneDrive/Desktop/Hatim/DSA/DS_Proj/animatedredenemy.png",1.25f,1.25f, 30, 32, 4, 0.1f, smart) {
 
     }
 };
@@ -281,7 +281,7 @@ class BlueEnemy : public Enemy
 {
 public:
     BlueEnemy(PathNode* start, bool smart = false)
-        : Enemy(25, start, "C:/Users/umera/Desktop/frogbluenemy.png", 1.25f, 1.25f, 40, 40, 6, 0.15f, smart) {
+        : Enemy(25, start, "C:/Users/Dell/OneDrive/Desktop/Hatim/DSA/DS_Proj/frogbluenemy.png", 1.f, 1.f, 40, 40, 6, 0.15f, smart) {
     }
 };
 
@@ -289,7 +289,7 @@ class GreenEnemy : public Enemy
 {
 public:
     GreenEnemy(PathNode* start, bool smart = false)
-        : Enemy(40, start, "C:/Users/umera/Desktop/animatedgreenenemy.png", 0.8f, 0.8f, 58, 45, 4, 0.15f, smart) {
+        : Enemy(40, start, "C:/Users/Dell/OneDrive/Desktop/Hatim/DSA/DS_Proj/animatedgreenenemy.png", 0.8f, 0.8f, 58, 45, 4, 0.15f, smart) {
     }
 };
 
@@ -345,7 +345,7 @@ public:
             pow(shape.getPosition().x - targetPos.x, 2) +
             pow(shape.getPosition().y - targetPos.y, 2));
 
-        if (distance < target->getRadius())
+        if (distance < target->getRadius() + 3)
         {
             target->takeDamage(damage, player);
             alive = false;
@@ -1574,6 +1574,11 @@ public:
         currentWave++; // increment wave for the next start
     }
 
+    bool isGameComplete()
+    {
+        return !waveActive && player.getHealth() > 0;
+    }
+
     void draw(RenderWindow& window)
     {
         gameMap->draw(window);
@@ -1612,11 +1617,36 @@ public:
             window.draw(overlay);
 
             static Font font;
-            font.loadFromFile("C:/Windows/Fonts/arial.ttf");
+            font.loadFromFile("C:/Users/Dell/OneDrive/Desktop/Hatim/DSA/DS_Proj/Clash_Regular.otf");
 
             Text txt;
             txt.setFont(font);
             txt.setString("GAME OVER!");
+            txt.setCharacterSize(120);
+            txt.setFillColor(Color::White);
+            txt.setOutlineThickness(5);
+            txt.setOutlineColor(Color::Black);
+
+            FloatRect bounds = txt.getLocalBounds();
+            txt.setOrigin(bounds.width / 2, bounds.height / 2);
+            txt.setPosition(window.getSize().x / 2, window.getSize().y / 2);
+
+            window.draw(txt);
+        }
+
+        if (isGameComplete())
+        {
+            RectangleShape overlay;
+            overlay.setSize(Vector2f(window.getSize()));
+            overlay.setFillColor(Color(0, 0, 0, 150));
+            window.draw(overlay);
+
+            static Font font;
+            font.loadFromFile("C:/Users/Dell/OneDrive/Desktop/Hatim/DSA/DS_Proj/Clash_Regular.otf");
+
+            Text txt;
+            txt.setFont(font);
+            txt.setString("YOU WIN!");
             txt.setCharacterSize(120);
             txt.setFillColor(Color::White);
             txt.setOutlineThickness(5);

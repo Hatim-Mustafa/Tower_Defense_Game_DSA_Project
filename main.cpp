@@ -97,7 +97,7 @@ public:
 class GreenEnemy : public Enemy {
 public:
     GreenEnemy(PathNode* start)
-        : Enemy(40, start, sf::Color::Green, 0.5f) {
+        : Enemy(40, start, sf::Color::Green, 0.35f) {
     }
 };
 
@@ -784,23 +784,28 @@ public:
 
         wavePattern.clear();
 
-        if (currentWave < 4)
-            for (int i = 0; i < 5; ++i) wavePattern.push_back(0);
+        if (currentWave == 1)
+            for (int i = 0; i < 10; ++i) wavePattern.push_back(0);
 
-        if (currentWave >= 2) {
-            for (int i = 0; i < 2; ++i) wavePattern.push_back(1);
-        }
-        // Add 2 Greens starting from wave 3
-        if (currentWave >= 3) {
-            for (int i = 0; i < 2; ++i) wavePattern.push_back(2);
+        if (currentWave == 2) {
+            for (int i = 0; i < 5; ++i) wavePattern.push_back(1);
         }
 
-        if (currentWave >= 4) {
-            for (int i = 0; i < 2; ++i)
-                wavePattern.push_back(0);
-            for (int i = 0; i < 3; ++i)
+        if (currentWave == 3) {
+            //for (int i = 0; i < 5; ++i)
+              //  wavePattern.push_back(0);
+            for (int i = 0; i < 5; ++i)
                 wavePattern.push_back(1);
-            for (int i = 0; i < 2; ++i)
+            for (int i = 0; i < 10; ++i)
+                wavePattern.push_back(2);
+        }
+
+		        if (currentWave >= 4) {
+            //for (int i = 0; i < 5; ++i)
+              //  wavePattern.push_back(0);
+            for (int i = 0; i < 10; ++i)
+                wavePattern.push_back(1);
+            for (int i = 0; i < 10; ++i)
                 wavePattern.push_back(2);
         }
 

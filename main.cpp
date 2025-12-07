@@ -13,6 +13,7 @@ using namespace sf;
 
 class Player; // Forward declaration
 class GameManager; // Forward declaration
+class Enemy; // Forward declaration
 
 // ========== Coordinate ==========
 struct Coordinate
@@ -46,12 +47,93 @@ public:
     }
 };
 
+class Player
+{
+    int money;
+    int health;
+    Font font;
+    Text healthText;
+    ConvexShape heartShape;
+    CircleShape coinIcon;
+    Text moneyText;
+
+public:
+    Player() : money(400), health(200)
+    {
+        // Load Font
+        if (!font.loadFromFile("C:/Users/admin/Desktop/Project/pac2/ARIAL.TTF"))
+        {
+            cout << "Failed to load system font!" << endl;
+        }
+
+        // Setup Health Text
+        healthText.setFont(font);
+        healthText.setCharacterSize(30);
+        healthText.setFillColor(Color::White);
+        healthText.setPosition(70, 15); // Offset to right of heart
+
+        // Setup Heart Shape
+        heartShape.setPointCount(6);
+        heartShape.setPoint(0, Vector2f(20, 45)); // Bottom tip
+        heartShape.setPoint(1, Vector2f(0, 20));  // Left middle
+        heartShape.setPoint(2, Vector2f(10, 0));  // Left top hump
+        heartShape.setPoint(3, Vector2f(20, 10)); // Top V dip
+        heartShape.setPoint(4, Vector2f(30, 0));  // Right top hump
+        heartShape.setPoint(5, Vector2f(40, 20)); // Right middle
+
+        heartShape.setFillColor(Color::Red);
+        heartShape.setPosition(20, 10);
+
+        coinIcon.setRadius(15);
+        coinIcon.setFillColor(Color(255, 215, 0));
+        coinIcon.setOutlineThickness(2);
+        coinIcon.setOutlineColor(Color(184, 134, 11));
+        coinIcon.setPosition(150, 18);
+
+        moneyText.setFont(font);
+        moneyText.setCharacterSize(30);
+        moneyText.setFillColor(Color::White);
+        moneyText.setPosition(190, 15);
+    }
+
+    void updateHealth(Enemy& E);
+
+    void increaseMoney(int g)
+    {
+        if (g < 5){
+        money = money + (100 * g);
+        }
+        else {
+			money += g;
+        }
+    }
+
+    void decreaseMoney(int amount)
+    {
+        money -= amount;
+    }
+
+    int getHealth() { return health; }
+    int getMoney() { return money; }
+
+    void draw(RenderWindow& window)
+    {
+        healthText.setString(to_string(health));
+        window.draw(heartShape);
+        window.draw(healthText);
+        window.draw(coinIcon);
+        moneyText.setString(to_string(money));
+        window.draw(moneyText);
+    }
+};
+
 // ========== Enemy ==========
 class Enemy
 {
     int health, speed;
+    int oghealth;
     PathNode* current;
-    sf::CircleShape shape;
+    CircleShape shape;
     bool alive = true;
     float moveProgress = 0.0f;
     float moveInterval;
@@ -59,7 +141,7 @@ class Enemy
     stack<PathNode*> smartPath;
 
 public:
-    Enemy(int hp, PathNode* start, sf::Color c, float moveInterval, bool smart = false) : health(hp), current(start), moveInterval(moveInterval), useSmart(smart)
+    Enemy(int hp, PathNode* start,  Color c, float moveInterval, bool smart = false) : health(hp), current(start), oghealth(hp), moveInterval(moveInterval), useSmart(smart)
     {
         shape.setRadius(8);
         shape.setFillColor(c);
@@ -115,12 +197,13 @@ public:
 
     Vector2f getPosition() { return shape.getPosition(); }
 
-    void takeDamage(int dmg)
+    void takeDamage(int dmg, Player& player)
     {
         health -= dmg;
         if (health <= 0)
         {
             alive = false;
+            player.increaseMoney(oghealth);
         }
     }
 
@@ -132,7 +215,7 @@ public:
     bool isAlive() { return alive; }
     int gethealth() { return health; }
     float getRadius() { return shape.getRadius(); }
-    void draw(sf::RenderWindow& window) { window.draw(shape); }
+    void draw(RenderWindow& window) { window.draw(shape); }
     PathNode* getCurrentNode() { return current; }
 };
 
@@ -140,29 +223,28 @@ class RedEnemy : public Enemy
 {
 public:
     RedEnemy(PathNode* start, bool smart = false)
-        : Enemy(10, start, sf::Color::Red, 0.2f, smart)
-    {
-    }
+        : Enemy(10, start,  Color::Red, 0.2f, smart){}
 };
 
 class BlueEnemy : public Enemy
 {
 public:
     BlueEnemy(PathNode* start, bool smart = false)
-        : Enemy(25, start, sf::Color::Blue, 0.3f, smart)
-    {
-    }
+        : Enemy(25, start,  Color::Blue, 0.3f, smart){}
 };
 
 class GreenEnemy : public Enemy
 {
 public:
     GreenEnemy(PathNode* start, bool smart = false)
-        : Enemy(40, start, sf::Color::Green, 0.3f, smart)
-    {
-    }
+        : Enemy(40, start,  Color::Green, 0.3f, smart){}
 };
 
+
+void Player::updateHealth(Enemy& E)
+{
+    health = health - E.gethealth();
+}
 // ========== Tower ==========
 
 class Projectile
@@ -174,16 +256,16 @@ class Projectile
     CircleShape shape;
 
 public:
-    Projectile(const sf::Vector2f& startPos, Enemy* targetEnemy, int dmg, float spd)
+    Projectile(const  Vector2f& startPos, Enemy* targetEnemy, int dmg, float spd)
         : target(targetEnemy), damage(dmg), speed(spd)
     {
         shape.setRadius(GRID_SIZE / 4);
-        shape.setFillColor(sf::Color::Blue);
+        shape.setFillColor( Color::Blue);
         shape.setOrigin(5.f, 5.f);
         shape.setPosition(startPos);
     }
 
-    void update(float dt)
+    void update(float dt, Player& player)
     {
         if (!alive || target == nullptr || !target->isAlive())
         {
@@ -213,7 +295,7 @@ public:
 
         if (distance < target->getRadius())
         {
-            target->takeDamage(damage);
+            target->takeDamage(damage, player);
             alive = false;
         }
     }
@@ -262,8 +344,8 @@ public:
     UpgradeNode* root;
     UpgradeNode* current;
 
-    sf::CircleShape shape;
-    sf::CircleShape rangeCircle;
+     CircleShape shape;
+     CircleShape rangeCircle;
 
     Tower(Vector2i coord = Vector2i(0, 0))
     {
@@ -276,12 +358,12 @@ public:
         speed = 250.f;
 
         shape.setRadius(GRID_SIZE);
-        shape.setFillColor(sf::Color::Blue);
+        shape.setFillColor( Color::Blue);
         shape.setPosition(pos.x * GRID_SIZE, pos.y * GRID_SIZE);
         shape.setOrigin(GRID_SIZE, GRID_SIZE);
         rangeCircle.setRadius(range);
         rangeCircle.setOrigin(range, range);
-        rangeCircle.setFillColor(sf::Color(0, 0, 255, 50));
+        rangeCircle.setFillColor( Color(0, 0, 255, 50));
         rangeCircle.setPosition(pos.x * GRID_SIZE + GRID_SIZE / 2, pos.y * GRID_SIZE + GRID_SIZE / 2);
 
         buildUpgradeTree();
@@ -326,12 +408,12 @@ public:
         return count;
     }
 
-    bool isClicked(sf::Vector2f mousePos)
+    bool isClicked( Vector2f mousePos)
     {
         return shape.getGlobalBounds().contains(mousePos);
     }
 
-    void draw(sf::RenderWindow& window)
+    void draw( RenderWindow& window)
     {
         window.draw(shape);
 
@@ -340,21 +422,21 @@ public:
             window.draw(rangeCircle); // draw tower range
 
             // Draw single upgrade button first
-            sf::RectangleShape upgradeBtn(sf::Vector2f(100, 30));
+             RectangleShape upgradeBtn( Vector2f(100, 30));
             upgradeBtn.setPosition(pos.x * GRID_SIZE, pos.y * GRID_SIZE - 35);
-            upgradeBtn.setFillColor(sf::Color(100, 100, 250));
+            upgradeBtn.setFillColor( Color(100, 100, 250));
 
-            sf::Font font;
+             Font font;
             if (!font.loadFromFile("C:/Windows/Fonts/arial.ttf"))
             {
-                std::cout << "Failed to load system font!" << std::endl;
+                 cout << "Failed to load system font!" <<  endl;
             }
 
-            sf::Text txt;
+             Text txt;
             txt.setFont(font);
             txt.setString("Upgrade");
             txt.setCharacterSize(12);
-            txt.setFillColor(sf::Color::White);
+            txt.setFillColor( Color::White);
             txt.setPosition(upgradeBtn.getPosition().x + 20, upgradeBtn.getPosition().y + 5);
 
             window.draw(upgradeBtn);
@@ -368,15 +450,15 @@ public:
 
                 for (int i = 0; i < n; i++)
                 {
-                    sf::RectangleShape btn(sf::Vector2f(100, 40));
+                     RectangleShape btn( Vector2f(100, 40));
                     btn.setPosition(pos.x * GRID_SIZE, pos.y * GRID_SIZE + GRID_SIZE + i * 45);
-                    btn.setFillColor(sf::Color(100, 100, 250));
+                    btn.setFillColor( Color(100, 100, 250));
 
-                    sf::Text optionTxt;
+                     Text optionTxt;
                     optionTxt.setFont(font);
                     optionTxt.setString(options[i]->name + "\nCost: " + to_string(options[i]->UpgradeCost));
                     optionTxt.setCharacterSize(12);
-                    optionTxt.setFillColor(sf::Color::White);
+                    optionTxt.setFillColor( Color::White);
                     optionTxt.setPosition(btn.getPosition().x + 5, btn.getPosition().y + 5);
 
                     window.draw(btn);
@@ -390,7 +472,7 @@ public:
             p.draw(window);
         }
     }
-    void update(float dt, vector<Enemy*>& enemies)
+    void update(float dt, vector<Enemy*>& enemies, Player& player)
     {
         timer -= dt;
         Enemy* target;
@@ -407,7 +489,7 @@ public:
         for (auto& p : projectiles)
         {
             if (p.isAlive())
-                p.update(dt);
+                p.update(dt, player);
         }
 
         projectiles.erase(
@@ -437,23 +519,23 @@ public:
 class Shop
 {
 public:
-    sf::RectangleShape shopTower;
+     RectangleShape shopTower;
     bool isDragging;
     Shop()
     {
-        shopTower.setSize(sf::Vector2f(GRID_SIZE * PIXEL, GRID_SIZE * PIXEL));
-        shopTower.setFillColor(sf::Color::Red);
+        shopTower.setSize( Vector2f(GRID_SIZE * PIXEL, GRID_SIZE * PIXEL));
+        shopTower.setFillColor( Color::Red);
         shopTower.setPosition(52 * GRID_SIZE, 0); // shop location
         isDragging = false;
     }
-    void draw(sf::RenderWindow& window) { window.draw(shopTower); }
+    void draw( RenderWindow& window) { window.draw(shopTower); }
 };
 
 // ========== Map ==========
 class Map {
     int rows, cols;
     vector<vector<int>> grid;
-    vector<sf::RectangleShape> tiles;
+    vector< RectangleShape> tiles;
 public:
     Map(int r, int c) : rows(r), cols(c) {
         grid.assign(rows, vector<int>(cols, 0));
@@ -507,17 +589,17 @@ public:
 
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < cols; j++) {
-                sf::RectangleShape rect(sf::Vector2f(GRID_SIZE, GRID_SIZE));
+                 RectangleShape rect( Vector2f(GRID_SIZE, GRID_SIZE));
                 rect.setPosition(j * GRID_SIZE, i * GRID_SIZE);
-                if (grid[i][j] == 0) rect.setFillColor(sf::Color(150, 150, 150)); // path
-                else if (grid[i][j] == 2) rect.setFillColor(sf::Color(0, 0, 0)); // special path
-                else rect.setFillColor(sf::Color(0, 200, 0)); // grass
+                if (grid[i][j] == 0) rect.setFillColor( Color(150, 150, 150)); // path
+                else if (grid[i][j] == 2) rect.setFillColor( Color(0, 0, 0)); // special path
+                else rect.setFillColor( Color(0, 200, 0)); // grass
                 tiles.push_back(rect);
             }
         }
     }
 
-    void draw(sf::RenderWindow& window) {
+    void draw( RenderWindow& window) {
         for (auto& t : tiles) window.draw(t);
     }
 
@@ -698,78 +780,6 @@ void buildPathNetwork(PathNode* start, string movement, Map* gameMap) {
         end->front = end2;
     }
 }
-
-class Player
-{
-    int money;
-    int health;
-    sf::Font font;
-    sf::Text healthText;
-    sf::ConvexShape heartShape; 
-    sf::CircleShape coinIcon;
-    sf::Text moneyText;
-
-public:
-    Player() : money(500), health(200)
-    {
-        // Load Font
-        if (!font.loadFromFile("C:/Users/admin/Desktop/Project/pac2/ARIAL.TTF"))
-        {
-            std::cout << "Failed to load system font!" << std::endl;
-        }
-
-        // Setup Health Text
-        healthText.setFont(font);
-        healthText.setCharacterSize(30);
-        healthText.setFillColor(sf::Color::White);
-        healthText.setPosition(70, 15); // Offset to right of heart
-
-        // Setup Heart Shape
-        heartShape.setPointCount(6);
-        heartShape.setPoint(0, sf::Vector2f(20, 45)); // Bottom tip
-        heartShape.setPoint(1, sf::Vector2f(0, 20));  // Left middle
-        heartShape.setPoint(2, sf::Vector2f(10, 0));  // Left top hump
-        heartShape.setPoint(3, sf::Vector2f(20, 10)); // Top V dip
-        heartShape.setPoint(4, sf::Vector2f(30, 0));  // Right top hump
-        heartShape.setPoint(5, sf::Vector2f(40, 20)); // Right middle
-
-        heartShape.setFillColor(sf::Color::Red);
-        heartShape.setPosition(20, 10);
-
-        coinIcon.setRadius(15);
-        coinIcon.setFillColor(sf::Color(255, 215, 0));
-        coinIcon.setOutlineThickness(2);
-        coinIcon.setOutlineColor(sf::Color(184, 134, 11));
-        coinIcon.setPosition(150, 18);
-
-        moneyText.setFont(font);
-        moneyText.setCharacterSize(25);
-        moneyText.setFillColor(sf::Color::Yellow);
-        moneyText.setPosition(190, 15);
-    }
-
-    void updateHealth(Enemy& E)
-    {
-        health = health - E.gethealth();
-    }
-
-    void increaseMoney(GameManager& g);
-
-    void decreaseMoney(int amount)
-    {
-        money -= amount;
-    }
-
-    int getHealth() { return health; }
-    int getMoney() { return money; }
-
-    void draw(sf::RenderWindow& window)
-    {
-        healthText.setString(to_string(health));
-        window.draw(heartShape);
-        window.draw(healthText);
-    }
-};
 
 bool Tower::upgrade(UpgradeNode* targetNode, Player player)
 {
@@ -981,7 +991,7 @@ class GameManager
     vector<Tower*> towers;
     vector<Enemy*> enemies;
     PathNode* pathHead;
-    sf::Clock clock;
+     Clock clock;
     float enemyMoveTimer;
 
     vector<int> wavePattern;
@@ -1015,7 +1025,7 @@ public:
         pathHead = start;
     }
 
-    void checkShopDrag(sf::Vector2f coord, bool clicked)
+    void checkShopDrag( Vector2f coord, bool clicked)
     {
         if (shop.isDragging && !clicked)
         {
@@ -1058,7 +1068,7 @@ public:
             }
         }
     }
-    void checkTowerClick(sf::Vector2f mousePos)
+    void checkTowerClick( Vector2f mousePos)
     {
         bool clickedOnTower = false;
         bool clickedOnUpgradeUI = false;
@@ -1127,7 +1137,7 @@ public:
         }
     }
 
-    void checkUpgradeClick(sf::Vector2f mousePos)
+    void checkUpgradeClick( Vector2f mousePos)
     {
         for (auto& t : towers)
         {
@@ -1229,7 +1239,7 @@ public:
 
         // Update towers
         for (auto& t : towers)
-            t->update(dt, enemies);
+            t->update(dt, enemies, player);
 
         // Handle dragging
         if (shop.isDragging)
@@ -1286,10 +1296,11 @@ public:
         spawnTimer = 0.0f;
         waveActive = true;
         wavePauseTimer = 0.0f;
+        player.increaseMoney(currentWave);
         currentWave++; // increment wave for the next start
     }
 
-    void draw(sf::RenderWindow& window)
+    void draw( RenderWindow& window)
     {
         gameMap->draw(window);
         shop.draw(window);
@@ -1307,15 +1318,10 @@ public:
     friend class Player;
 };
 
-void Player::increaseMoney(GameManager& g)
-{
-    money = money + 100 * g.getWaveCount();
-}
-
 // ========== MAIN ==========
 int main()
 {
-    sf::RenderWindow window(sf::VideoMode(52 * GRID_SIZE + PIXEL * GRID_SIZE, 36 * GRID_SIZE), "Tower Defense Game");
+     RenderWindow window( VideoMode(52 * GRID_SIZE + PIXEL * GRID_SIZE, 36 * GRID_SIZE), "Tower Defense Game");
     window.setFramerateLimit(60);
 
     GameManager game;
@@ -1325,32 +1331,32 @@ int main()
 
     while (window.isOpen())
     {
-        sf::Event event;
+         Event event;
         float dt = clock.restart().asSeconds();
         while (window.pollEvent(event))
         {
-            if (event.type == sf::Event::Closed)
+            if (event.type ==  Event::Closed)
                 window.close();
 
             // Mouse press: begin drag if clicked on the shop item
-            if (event.type == sf::Event::MouseButtonPressed &&
-                event.mouseButton.button == sf::Mouse::Left)
+            if (event.type ==  Event::MouseButtonPressed &&
+                event.mouseButton.button ==  Mouse::Left)
             {
-                sf::Vector2f mousePos = window.mapPixelToCoords(sf::Mouse::getPosition(window));
+                 Vector2f mousePos = window.mapPixelToCoords( Mouse::getPosition(window));
                 game.checkUpgradeClick(mousePos);
                 game.checkTowerClick(mousePos);
                 game.checkShopDrag(mousePos, true);
             }
 
             // Mouse release: drop tower
-            if (event.type == sf::Event::MouseButtonReleased &&
-                event.mouseButton.button == sf::Mouse::Left)
+            if (event.type ==  Event::MouseButtonReleased &&
+                event.mouseButton.button ==  Mouse::Left)
             {
                 game.checkShopDrag({ 0, 0 }, false);
             }
         }
 
-        game.update(window.mapPixelToCoords(sf::Mouse::getPosition(window)), dt, dtt);
+        game.update(window.mapPixelToCoords( Mouse::getPosition(window)), dt, dtt);
 
         window.clear();
         game.draw(window);

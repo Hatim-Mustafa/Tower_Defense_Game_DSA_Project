@@ -308,11 +308,25 @@ class Projectile
     int damage;
     bool alive = true;
     CircleShape shape;
+	static Texture projectileTexture;
+	Sprite projectileSprite;
 
 public:
     Projectile(const  Vector2f& startPos, Enemy* targetEnemy, int dmg, float spd)
         : target(targetEnemy), damage(dmg), speed(spd)
     {
+        if (projectileTexture.getSize().x == 0)
+        {
+            projectileTexture.loadFromFile("C:/Users/umera/Desktop/Projectile.png");
+        }
+
+        projectileSprite.setTexture(projectileTexture);
+
+		projectileSprite.setTexture(projectileTexture);
+		//projectileSprite.setScale(0.2f, 0.2f);
+		projectileSprite.setPosition(startPos);
+        Vector2u size = projectileTexture.getSize();
+        projectileSprite.setOrigin(size.x / 2.f, size.y / 2.f);
         shape.setRadius(GRID_SIZE / 4);
         shape.setFillColor(Color::Blue);
         shape.setOrigin(5.f, 5.f);
@@ -327,7 +341,7 @@ public:
             return;
         }
 
-        Vector2f pos = shape.getPosition();
+        Vector2f pos = projectileSprite.getPosition();
         Vector2f targetPos = target->getPosition();
 
         Vector2f dir = targetPos - pos;
@@ -340,12 +354,12 @@ public:
         }
 
         dir /= length;
-        shape.move(dir * speed * dt);
+        projectileSprite.move(dir * speed * dt);
 
         // collision check
         float distance = sqrt(
-            pow(shape.getPosition().x - targetPos.x, 2) +
-            pow(shape.getPosition().y - targetPos.y, 2));
+            pow(projectileSprite.getPosition().x - targetPos.x, 2) +
+            pow(projectileSprite.getPosition().y - targetPos.y, 2));
 
         if (distance < target->getRadius() + 3)
         {
@@ -358,7 +372,8 @@ public:
 
     void draw(RenderWindow& window)
     {
-        window.draw(shape);
+        //window.draw(shape);
+		window.draw(projectileSprite);
     }
 };
 
@@ -1260,6 +1275,7 @@ class GameManager
     float enemyMoveTimer;
     bool isGameover;
 
+
     vector<int> wavePattern;
     int maxEnemies = 0;
     int enemiesSpawned = 0;
@@ -1287,6 +1303,7 @@ public:
         PathNode* second = new PathNode({ 41, 34 });
         start->front = second;
         buildPathNetwork(second, "UP", gameMap);
+
 
         pathHead = start;
     }
@@ -1714,7 +1731,7 @@ public:
 
     friend class Player;
 };
-
+sf::Texture Projectile::projectileTexture;
 // ========== MAIN ==========
 int main()
 {

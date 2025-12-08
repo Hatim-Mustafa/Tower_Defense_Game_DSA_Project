@@ -704,6 +704,9 @@ public:
     RectangleShape shopTower;
     bool isDragging;
     Text waveText;
+	Texture shopTexture;
+	Sprite shopSprite;
+
     Shop()
     {
         shopTower.setSize(Vector2f(GRID_SIZE * PIXEL, GRID_SIZE * PIXEL));
@@ -725,9 +728,20 @@ public:
             waveText.setPosition(shopX - textWidth + 590, 5);
 
         }
+		if (!shopTexture.loadFromFile("C:/Users/umera/Desktop/shop.png"))  
+        {
+            cout << "Failed to load shop texture!\n";
+        }
+
+        shopSprite.setTexture(shopTexture);
+        shopSprite.setScale(1.0f, 1.0f); 
+        shopSprite.setPosition(52 * GRID_SIZE, 35); 
+    }
     }
     void draw(RenderWindow& window) {
-        window.draw(shopTower); window.draw(waveText);
+        window.draw(shopTower); 
+		window.draw(waveText);
+		window.draw(shopSprite);
     }
 };
 

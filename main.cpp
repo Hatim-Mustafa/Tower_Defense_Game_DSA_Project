@@ -1685,6 +1685,17 @@ int main()
     GameManager game;
     Clock clock;
 
+    Texture panelTexture;
+    Sprite panelSprite;
+
+    if (panelTexture.loadFromFile("C:/Users/umera/Desktop/blank.png"))
+    {
+        panelSprite.setTexture(panelTexture);
+        panelSprite.setPosition(52 * GRID_SIZE, 35+80);  // Right side
+        panelSprite.setScale(1.0f, 1.265f); // Resize if needed
+    }
+
+
     while (window.isOpen())
     {
         Event event;
@@ -1715,9 +1726,13 @@ int main()
 
         game.update(window.mapPixelToCoords(Mouse::getPosition(window)), dt);
 
+
+
         window.clear();
+        window.draw(panelSprite);
         game.draw(window);
         window.display();
+
     }
 
     return 0;

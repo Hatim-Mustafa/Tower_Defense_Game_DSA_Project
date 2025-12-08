@@ -737,7 +737,6 @@ public:
         shopSprite.setScale(1.0f, 1.0f); 
         shopSprite.setPosition(52 * GRID_SIZE, 35); 
     }
-    }
     void draw(RenderWindow& window) {
         window.draw(shopTower); 
 		window.draw(waveText);

@@ -143,7 +143,7 @@ class Enemy
     float moveInterval;
     bool useSmart;
     stack<PathNode*> smartPath;
-    Sprite EnemySprite;        
+    Sprite EnemySprite;
     Texture EnemyTexture;
     int frameCount;
     int currentFrame = 0;
@@ -153,8 +153,8 @@ class Enemy
     int frameHeight;
 
 public:
-	Enemy(int hp, PathNode* start, const string& TexturePath, float setScale_x, float setScale_y,
-		int frameW, int frameH, int frames,
+    Enemy(int hp, PathNode* start, const string& TexturePath, float setScale_x, float setScale_y,
+        int frameW, int frameH, int frames,
         float moveInterval, bool smart = false)
         : health(hp), current(start), oghealth(hp),
         moveInterval(moveInterval), useSmart(smart),
@@ -233,7 +233,7 @@ public:
         if (!alive)
             return;
 
-		updateAnimation(dt);
+        updateAnimation(dt);
 
         moveProgress += dt;
         if (moveProgress >= moveInterval /* or based on speed */)
@@ -264,7 +264,9 @@ public:
     int gethealth() { return health; }
     float getRadius() { return shape.getRadius(); }
     void draw(RenderWindow& window)
-    { window.draw(EnemySprite); }
+    {
+        window.draw(EnemySprite);
+    }
     PathNode* getCurrentNode() { return current; }
 };
 
@@ -272,7 +274,7 @@ class RedEnemy : public Enemy
 {
 public:
     RedEnemy(PathNode* start, bool smart = false)
-        : Enemy(10, start, "C:/Users/Dell/OneDrive/Desktop/Hatim/DSA/DS_Proj/animatedredenemy.png",1.25f,1.25f, 30, 32, 4, 0.1f, smart) {
+        : Enemy(10, start, "C:/Users/umera/Desktop/animatedredenemy.png", 1.25f, 1.25f, 30, 32, 4, 0.1f, smart) {
 
     }
 };
@@ -281,7 +283,7 @@ class BlueEnemy : public Enemy
 {
 public:
     BlueEnemy(PathNode* start, bool smart = false)
-        : Enemy(25, start, "C:/Users/Dell/OneDrive/Desktop/Hatim/DSA/DS_Proj/frogbluenemy.png", 1.f, 1.f, 40, 40, 6, 0.15f, smart) {
+        : Enemy(25, start, "C:/Users/umera/Desktop/frogbluenemy.png", 1.f, 1.f, 40, 40, 6, 0.15f, smart) {
     }
 };
 
@@ -289,7 +291,7 @@ class GreenEnemy : public Enemy
 {
 public:
     GreenEnemy(PathNode* start, bool smart = false)
-        : Enemy(40, start, "C:/Users/Dell/OneDrive/Desktop/Hatim/DSA/DS_Proj/animatedgreenenemy.png", 0.8f, 0.8f, 58, 45, 4, 0.15f, smart) {
+        : Enemy(40, start, "C:/Users/umera/Desktop/animatedgreenenemy.png", 0.8f, 0.8f, 58, 45, 4, 0.15f, smart) {
     }
 };
 
@@ -379,6 +381,7 @@ struct UpgradeNode
     }
 };
 
+
 class Tower
 {
 public:
@@ -395,11 +398,17 @@ public:
     bool showModeOptions = false;
     string targetingMode = "First Enemy";
 
+    int level = 1;
+    string texturePath = "C:/Users/umera/Desktop/tower.png";
+
     UpgradeNode* root;
     UpgradeNode* current;
 
+	Texture towerTexture;
+	Sprite towerSprite;
     CircleShape shape;
     CircleShape rangeCircle;
+
 
     Tower(Vector2i coord = Vector2i(0, 0))
     {
@@ -411,10 +420,18 @@ public:
         TowerCost = 150;
         speed = 250.f;
 
-        shape.setRadius(GRID_SIZE);
-        shape.setFillColor(Color::Blue);
-        shape.setPosition(pos.x * GRID_SIZE, pos.y * GRID_SIZE);
-        shape.setOrigin(GRID_SIZE, GRID_SIZE);
+        //shape.setRadius(GRID_SIZE);
+        //shape.setFillColor(Color::Blue);
+
+		texturePath = "C:/Users/umera/Desktop/tower.png";
+		if (!towerTexture.loadFromFile(texturePath))
+		{
+			cout << "Failed to load tower texture!\n";
+		}
+		towerSprite.setTexture(towerTexture);
+        towerSprite.setPosition(pos.x * GRID_SIZE, pos.y * GRID_SIZE);
+        towerSprite.setOrigin(GRID_SIZE, GRID_SIZE);
+		towerSprite.setScale(1.2f, 1.2f);
         rangeCircle.setRadius(range);
         rangeCircle.setOrigin(range, range);
         rangeCircle.setFillColor(Color(0, 0, 255, 50));
@@ -422,6 +439,17 @@ public:
 
         buildUpgradeTree();
         current = root;
+    }
+
+
+    void updateSprite()
+    {
+        if (!towerTexture.loadFromFile(texturePath)) {
+            cout << "Failed to load tower texture: " << texturePath << endl;
+        }
+
+        towerSprite.setTexture(towerTexture);
+        towerSprite.setScale(1.5f, 1.5f);
     }
 
     void buildUpgradeTree()
@@ -464,11 +492,11 @@ public:
 
     bool isClicked(Vector2f mousePos)
     {
-        return shape.getGlobalBounds().contains(mousePos);
+        return towerSprite.getGlobalBounds().contains(mousePos);
     }
 
     void draw(RenderWindow& window) {
-        window.draw(shape);
+        window.draw(towerSprite);
 
         if (isSelected) {
             window.draw(rangeCircle); // draw tower range
@@ -593,7 +621,7 @@ public:
             target = findTarget(enemies);
             if (target != nullptr)
             {
-                projectiles.push_back(Projectile(shape.getPosition(), target, damage, speed));
+                projectiles.push_back(Projectile(towerSprite.getPosition(), target, damage, speed));
                 timer = fireRate;
             }
         }
@@ -620,8 +648,8 @@ public:
                     continue;
 
                 float dist = sqrt(
-                    pow(e->getPosition().x - shape.getPosition().x, 2) +
-                    pow(e->getPosition().y - shape.getPosition().y, 2));
+                    pow(e->getPosition().x - towerSprite.getPosition().x, 2) +
+                    pow(e->getPosition().y - towerSprite.getPosition().y, 2));
 
                 if (dist <= range) {
                     enemy = e;
@@ -637,8 +665,8 @@ public:
                     continue;
 
                 float dist = sqrt(
-                    pow(e->getPosition().x - shape.getPosition().x, 2) +
-                    pow(e->getPosition().y - shape.getPosition().y, 2));
+                    pow(e->getPosition().x - towerSprite.getPosition().x, 2) +
+                    pow(e->getPosition().y - towerSprite.getPosition().y, 2));
 
                 if (dist <= range) {
                     if (e->gethealth() > h) {
@@ -656,8 +684,8 @@ public:
                     continue;
 
                 float dist = sqrt(
-                    pow(e->getPosition().x - shape.getPosition().x, 2) +
-                    pow(e->getPosition().y - shape.getPosition().y, 2));
+                    pow(e->getPosition().x - towerSprite.getPosition().x, 2) +
+                    pow(e->getPosition().y - towerSprite.getPosition().y, 2));
 
                 if (dist <= range) {
                     if (e->gethealth() > f) {
@@ -704,8 +732,8 @@ public:
     RectangleShape shopTower;
     bool isDragging;
     Text waveText;
-	Texture shopTexture;
-	Sprite shopSprite;
+    Texture shopTexture;
+    Sprite shopSprite;
 
     Shop()
     {
@@ -728,19 +756,19 @@ public:
             waveText.setPosition(shopX - textWidth + 590, 5);
 
         }
-		if (!shopTexture.loadFromFile("C:/Users/umera/Desktop/shop.png"))  
+        if (!shopTexture.loadFromFile("C:/Users/umera/Desktop/shop.png"))
         {
             cout << "Failed to load shop texture!\n";
         }
 
         shopSprite.setTexture(shopTexture);
-        shopSprite.setScale(1.0f, 1.0f); 
-        shopSprite.setPosition(52 * GRID_SIZE, 35); 
+        shopSprite.setScale(1.0f, 1.0f);
+        shopSprite.setPosition(52 * GRID_SIZE, 35);
     }
     void draw(RenderWindow& window) {
-        window.draw(shopTower); 
-		window.draw(waveText);
-		window.draw(shopSprite);
+        window.draw(shopTower);
+        window.draw(waveText);
+        window.draw(shopSprite);
     }
 };
 
@@ -814,7 +842,7 @@ public:
             }
         }
 
-        if (mapTexture.loadFromFile("C:/Users/Dell/OneDrive/Desktop/Hatim/DSA/DS_Proj/DSAmap-1-Recovered.png")) {
+        if (mapTexture.loadFromFile("C:/Users/umera/Desktop/DSAmap-1-Recovered.png")) {
             mapSprite.setTexture(mapTexture);
             mapSprite.setPosition(0, 0); // Make sure it lines up with tiles!
             mapSpriteLoaded = true;
@@ -1016,6 +1044,17 @@ bool Tower::upgrade(UpgradeNode* targetNode, Player player)
         speed += targetNode->speedBoost;
         current = targetNode;
 
+		level = level + 1;
+
+        // Change sprite depending on level
+        if (level == 2)
+            texturePath = "C:/Users/umera/Desktop/tower_level2.png";
+        else if (level == 3)
+            texturePath = "C:/Users/umera/Desktop/tower_level3.png";
+
+        // Load new sprite
+        updateSprite();
+
         rangeCircle.setRadius(range);
         rangeCircle.setOrigin(range, range);
 
@@ -1141,8 +1180,8 @@ stack<PathNode*> dijkstraPath(PathNode* start, Coordinate goal, vector<Tower*>& 
                 Tower* tower = towers[t];
 
                 // Calculate distance from neighbor to tower
-                float dx = neighbor->pos.x * GRID_SIZE - tower->shape.getPosition().x;
-                float dy = neighbor->pos.y * GRID_SIZE - tower->shape.getPosition().y;
+                float dx = neighbor->pos.x * GRID_SIZE - tower->towerSprite.getPosition().x;
+                float dy = neighbor->pos.y * GRID_SIZE - tower->towerSprite.getPosition().y;
                 float distance = sqrt(dx * dx + dy * dy);
 
                 // If tower can see this neighbor, add danger cost
@@ -1262,7 +1301,7 @@ public:
         if (shop.isDragging && !clicked)
         {
             shop.isDragging = false;
-            Vector2f coord = dragTower.shape.getPosition();
+            Vector2f coord = dragTower.towerSprite.getPosition();
             Vector2i pos = Vector2i(round(coord.x / GRID_SIZE), round(coord.y / GRID_SIZE));
             if (gameMap->isBuildable(pos.x, pos.y) && player.getMoney() > dragTower.getTowerCost())
             {
@@ -1330,7 +1369,7 @@ public:
         // Check if clicking on any tower
         for (auto& t : towers)
         {
-            if (t->shape.getGlobalBounds().contains(mousePos))
+            if (t->towerSprite.getGlobalBounds().contains(mousePos))
             {
                 clickedOnTower = true;
             }
@@ -1406,7 +1445,7 @@ public:
             // Then select the clicked tower
             for (auto& t : towers)
             {
-                if (t->shape.getGlobalBounds().contains(mousePos))
+                if (t->towerSprite.getGlobalBounds().contains(mousePos))
                 {
                     t->isSelected = true;
                     break;
@@ -1532,7 +1571,7 @@ public:
         // Handle dragging
         if (shop.isDragging)
         {
-            dragTower.shape.setPosition(mousePos.x - dragTower.shape.getRadius(),
+            dragTower.towerSprite.setPosition(mousePos.x - dragTower.shape.getRadius(),
                 mousePos.y - dragTower.shape.getRadius());
         }
     }

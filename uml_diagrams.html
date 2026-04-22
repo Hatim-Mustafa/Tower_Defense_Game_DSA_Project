@@ -419,37 +419,37 @@ skinparam arrowColor #6080c0
 skinparam classBackgroundColor #202840
 skinparam classBorderColor #304070
 
-package "Game Core" <<Frame>> {
+package "Game Core" as GameCore {
   class GameManager
   class Map
   class Player
 }
 
-package "Enemy Module" <<Frame>> {
+package "Enemy Module" as EnemyModule {
   class Enemy
   class RedEnemy
   class BlueEnemy
   class GreenEnemy
 }
 
-package "Tower Module" <<Frame>> {
+package "Tower Module" as TowerModule {
   class Tower
   class Projectile
   class UpgradeNode
   class Shop
 }
 
-package "Pathfinding Module" <<Frame>> {
+package "Pathfinding Module" as PathModule {
   class PathNode
   class Coordinate
   class PathCost
 }
 
-"Game Core" ..> "Enemy Module"       : <<uses>>
-"Game Core" ..> "Tower Module"       : <<uses>>
-"Game Core" ..> "Pathfinding Module" : <<uses>>
-"Tower Module"  ..> "Enemy Module"       : <<references>>
-"Enemy Module"  ..> "Pathfinding Module" : <<uses>>
+GameCore ..> EnemyModule : uses
+GameCore ..> TowerModule : uses
+GameCore ..> PathModule : uses
+TowerModule ..> EnemyModule : references
+EnemyModule ..> PathModule : uses
 @enduml
     </pre>
     <p class="loading">Loading diagram…</p>
@@ -476,44 +476,44 @@ skinparam arrowColor #6080c0
 skinparam componentBackgroundColor #202840
 skinparam componentBorderColor #304070
 
-package "Tower Defense Application" <<Rectangle>> {
+package "Tower Defense Application" as App {
 
-  package "Game Code" <<Frame>> {
-    [GameManager]
-    [Enemy / Subclasses]
-    [Tower]
-    [Map]
-    [Player]
-    [Projectile]
+  package "Game Code" as GameCode {
+    component "GameManager" as GM
+    component "Enemy / Subclasses" as EnemySubs
+    component "Tower" as TowerComp
+    component "Map" as MapComp
+    component "Player" as PlayerComp
+    component "Projectile" as ProjectileComp
   }
 }
 
-package "SFML 2.x" <<Database>> {
-  [sfml-graphics]
-  [sfml-window]
-  [sfml-system]
+package "SFML 2.x" as SFML {
+  component "sfml-graphics" as SfmlGraphics
+  component "sfml-window" as SfmlWindow
+  component "sfml-system" as SfmlSystem
 }
 
-package "C++ Standard Library" <<Database>> {
-  [std::vector]
-  [std::stack]
-  [std::queue]
-  [std::priority_queue]
-  [std::string]
-  [std::cmath]
+package "C++ Standard Library" as StdLib {
+  component "std::vector" as StdVector
+  component "std::stack" as StdStack
+  component "std::queue" as StdQueue
+  component "std::priority_queue" as StdPriorityQueue
+  component "std::string" as StdString
+  component "std::cmath" as StdCmath
 }
 
-[GameManager]        --> [sfml-graphics]  : renders via
-[GameManager]        --> [sfml-window]    : events via
-[GameManager]        --> [sfml-system]    : Clock / Time
-[Enemy / Subclasses] --> [std::stack]     : smartPath
-[Enemy / Subclasses] --> [sfml-graphics]  : Sprite / Texture
-[Tower]              --> [std::vector]    : projectiles list
-[Tower]              --> [sfml-graphics]  : draw
-[Map]                --> [std::vector]    : 2-D grid
-[GameManager]        --> [std::vector]    : towers / enemies
-[GameManager]        --> [std::priority_queue] : Dijkstra open-set
-[Projectile]         --> [std::cmath]     : sqrt / distance
+GM --> SfmlGraphics : renders via
+GM --> SfmlWindow : events via
+GM --> SfmlSystem : Clock / Time
+EnemySubs --> StdStack : smartPath
+EnemySubs --> SfmlGraphics : Sprite / Texture
+TowerComp --> StdVector : projectiles list
+TowerComp --> SfmlGraphics : draw
+MapComp --> StdVector : 2-D grid
+GM --> StdVector : towers / enemies
+GM --> StdPriorityQueue : Dijkstra open-set
+ProjectileComp --> StdCmath : sqrt / distance
 @enduml
     </pre>
     <p class="loading">Loading diagram…</p>
@@ -888,11 +888,10 @@ while (waveActive?) is (yes)
   endif
 endwhile (no)
 if (currentWave > 5?) then (yes)
-  :isGameComplete() → YOU WIN!;
+  :isGameComplete() - YOU WIN!;
   stop
 else (no)
-  :wavePauseTimer counts up\n→ startNextWave() again;
-  backward: next wave;
+  :wavePauseTimer counts up\nstartNextWave() again;
 endif
 stop
 @enduml

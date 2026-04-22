@@ -1,0 +1,1275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tower Defense Game – UML Diagrams</title>
+  <!-- pako for DEFLATE compression used by the PlantUML encoding algorithm -->
+  <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #0f0f1a;
+      color: #e0e0f0;
+      padding: 2rem 1rem;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 2.2rem;
+      margin-bottom: 0.4rem;
+      color: #c0d0ff;
+      letter-spacing: 0.05em;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #8090b0;
+      margin-bottom: 2.5rem;
+      font-size: 0.95rem;
+    }
+
+    .toc {
+      max-width: 900px;
+      margin: 0 auto 3rem;
+      background: #1a1a2e;
+      border: 1px solid #2a2a4a;
+      border-radius: 10px;
+      padding: 1.2rem 1.8rem;
+    }
+
+    .toc h2 {
+      font-size: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #8090c0;
+      margin-bottom: 0.8rem;
+    }
+
+    .toc ol {
+      column-count: 2;
+      column-gap: 2rem;
+      padding-left: 1.2rem;
+    }
+
+    .toc li { margin-bottom: 0.3rem; }
+
+    .toc a {
+      color: #7ab0ff;
+      text-decoration: none;
+      font-size: 0.88rem;
+    }
+
+    .toc a:hover { text-decoration: underline; }
+
+    .section {
+      max-width: 960px;
+      margin: 0 auto 3.5rem;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: baseline;
+      gap: 0.8rem;
+      border-bottom: 2px solid #2a3060;
+      padding-bottom: 0.4rem;
+      margin-bottom: 1.2rem;
+    }
+
+    .badge {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 0.15rem 0.55rem;
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+
+    .badge-usecase   { background: #2a4020; color: #80e060; }
+    .badge-class     { background: #202840; color: #70a0ff; }
+    .badge-package   { background: #2a2060; color: #a080ff; }
+    .badge-sequence  { background: #402020; color: #ff9060; }
+    .badge-activity  { background: #204040; color: #60d0d0; }
+    .badge-component { background: #402040; color: #d060d0; }
+    .badge-deployment{ background: #403020; color: #d0a040; }
+    .badge-comm      { background: #204020; color: #80c080; }
+
+    .section-header h2 {
+      font-size: 1.15rem;
+      color: #d0d8f8;
+      font-weight: 600;
+    }
+
+    .diagram-number {
+      color: #506080;
+      font-size: 0.85rem;
+    }
+
+    .diagram-card {
+      background: #16162a;
+      border: 1px solid #2a2a50;
+      border-radius: 10px;
+      padding: 1.5rem;
+      text-align: center;
+      min-height: 120px;
+    }
+
+    .diagram-card img {
+      max-width: 100%;
+      border-radius: 6px;
+      background: #fff;
+      padding: 8px;
+    }
+
+    .loading {
+      color: #6070a0;
+      font-style: italic;
+      font-size: 0.9rem;
+      padding: 2rem 0;
+    }
+
+    .error {
+      color: #ff6060;
+      font-size: 0.9rem;
+      padding: 1rem 0;
+    }
+
+    pre.plantuml { display: none; }
+
+    footer {
+      text-align: center;
+      color: #404060;
+      font-size: 0.8rem;
+      margin-top: 4rem;
+      padding-top: 1rem;
+      border-top: 1px solid #1e1e3a;
+    }
+  </style>
+</head>
+<body>
+
+<h1>🗼 Tower Defense Game</h1>
+<p class="subtitle">UML Diagrams — DSA Project &nbsp;|&nbsp; 17 Diagrams across 8 diagram types</p>
+
+<!-- ========== TABLE OF CONTENTS ========== -->
+<nav class="toc" aria-label="Table of Contents">
+  <h2>Table of Contents</h2>
+  <ol>
+    <li><a href="#uc01">UC-01 — Player Gameplay</a></li>
+    <li><a href="#cd01">CD-01 — Full Class Diagram</a></li>
+    <li><a href="#pkg01">PKG-01 — Source Module Packages</a></li>
+    <li><a href="#pkg02">PKG-02 — External Dependencies</a></li>
+    <li><a href="#sq01">SQ-01 — Game Startup</a></li>
+    <li><a href="#sq02">SQ-02 — Tower Placement</a></li>
+    <li><a href="#sq03">SQ-03 — Wave Spawn</a></li>
+    <li><a href="#sq04">SQ-04 — Combat Round</a></li>
+    <li><a href="#sq05">SQ-05 — Enemy Reaches End</a></li>
+    <li><a href="#sq06">SQ-06 — Game Over / Win</a></li>
+    <li><a href="#ac01">AC-01 — Main Game Loop</a></li>
+    <li><a href="#ac02">AC-02 — Wave &amp; Session Lifecycle</a></li>
+    <li><a href="#ac03">AC-03 — Tower Placement &amp; Upgrade</a></li>
+    <li><a href="#co01">CO-01 — System Components</a></li>
+    <li><a href="#de01">DE-01 — Windows Desktop Deployment</a></li>
+    <li><a href="#cm01">CM-01 — Placement &amp; Pathfinding</a></li>
+    <li><a href="#cm02">CM-02 — Combat Round</a></li>
+  </ol>
+</nav>
+
+<!-- ===================================================
+     1. USE-CASE DIAGRAM
+     =================================================== -->
+<section class="section" id="uc01">
+  <div class="section-header">
+    <span class="badge badge-usecase">Use-Case</span>
+    <h2>Player Gameplay</h2>
+    <span class="diagram-number">UC-01</span>
+  </div>
+  <div class="diagram-card">
+    <pre class="plantuml" data-title="UC-01 Player Gameplay">
+@startuml
+skinparam packageStyle rectangle
+skinparam usecase {
+  BackgroundColor #1a2a40
+  BorderColor #4060a0
+  FontColor #d0e0ff
+  ArrowColor #6080c0
+}
+skinparam actorStyle awesome
+left to right direction
+
+actor "Player" as P
+
+rectangle "Tower Defense Game" {
+  usecase "Start Game" as UC1
+  usecase "Place Tower on Map" as UC2
+  usecase "Upgrade Tower" as UC3
+  usecase "Change Targeting Mode" as UC4
+  usecase "Watch Enemy Wave" as UC5
+  usecase "View Health / Money" as UC6
+  usecase "Game Over" as UC7
+  usecase "Win Game" as UC8
+}
+
+P --> UC1
+P --> UC2
+P --> UC3
+P --> UC4
+P --> UC5
+P --> UC6
+
+UC5 .> UC7 : <<extend>>
+UC5 .> UC8 : <<extend>>
+UC2 .> UC3 : <<include>>
+@enduml
+    </pre>
+    <p class="loading">Loading diagram…</p>
+  </div>
+</section>
+
+<!-- ===================================================
+     2. CLASS DIAGRAM
+     =================================================== -->
+<section class="section" id="cd01">
+  <div class="section-header">
+    <span class="badge badge-class">Class</span>
+    <h2>Full Class Diagram</h2>
+    <span class="diagram-number">CD-01</span>
+  </div>
+  <div class="diagram-card">
+    <pre class="plantuml" data-title="CD-01 Full Class Diagram">
+@startuml
+skinparam classBackgroundColor #1a2030
+skinparam classBorderColor #3050a0
+skinparam classHeaderBackgroundColor #202840
+skinparam classFontColor #d0e0ff
+skinparam arrowColor #6080c0
+skinparam stereotypeFontColor #8090c0
+
+class Coordinate {
+  +x : int
+  +y : int
+}
+
+struct PathNode {
+  +pos : Coordinate
+  +front : PathNode*
+  +left : PathNode*
+  +right : PathNode*
+  +cost : int
+}
+
+class PathCost {
+  +node : PathNode*
+  +cost : int
+  +parent : PathNode*
+  +PathCost(n, c, p)
+}
+
+class Player {
+  -money : int
+  -health : int
+  +updateHealth(e: Enemy&) : void
+  +increaseMoney(g: int) : void
+  +decreaseMoney(amount: int) : void
+  +getHealth() : int
+  +getMoney() : int
+  +draw(RenderWindow&) : void
+}
+
+class Enemy {
+  -health : int
+  -speed : int
+  -alive : bool
+  -useSmart : bool
+  -smartPath : stack<PathNode*>
+  +move() : void
+  +takeDamage(dmg: int, p: Player&) : void
+  +setSmartPath(path: stack<PathNode*>) : void
+  +isAlive() : bool
+  +reachedEndOfPath() : bool
+  +getCurrentNode() : PathNode*
+  +draw(RenderWindow&) : void
+}
+
+class RedEnemy {
+  +RedEnemy(start: PathNode*, smart: bool)
+}
+
+class BlueEnemy {
+  +BlueEnemy(start: PathNode*, smart: bool)
+}
+
+class GreenEnemy {
+  +GreenEnemy(start: PathNode*, smart: bool)
+}
+
+Enemy <|-- RedEnemy
+Enemy <|-- BlueEnemy
+Enemy <|-- GreenEnemy
+
+struct UpgradeNode {
+  +name : string
+  +UpgradeCost : int
+  +damageBoost : int
+  +rangeBoost : int
+  +fireRateBoost : float
+  +speedBoost : float
+  +left : UpgradeNode*
+  +right : UpgradeNode*
+}
+
+class Projectile {
+  -speed : float
+  -damage : int
+  -alive : bool
+  -target : Enemy*
+  +update(dt: float, p: Player&) : void
+  +isAlive() : bool
+  +draw(RenderWindow&) : void
+}
+
+class Tower {
+  +damage : int
+  +range : int
+  +fireRate : float
+  +level : int
+  +targetingMode : string
+  +projectiles : vector<Projectile>
+  +buildUpgradeTree() : void
+  +upgrade(node: UpgradeNode*, p: Player) : bool
+  +getAvailableUpgrades(options[2]) : int
+  +findTarget(enemies: vector<Enemy*>&) : Enemy*
+  +update(dt, enemies, player) : void
+  +draw(RenderWindow&) : void
+}
+
+class Shop {
+  +isDragging : bool
+  +draw(RenderWindow&) : void
+}
+
+class Map {
+  -rows : int
+  -cols : int
+  -grid : vector<vector<int>>
+  +isBuildable(x: int, y: int) : bool
+  +isPath(x: int, y: int) : bool
+  +draw(RenderWindow&) : void
+}
+
+class GameManager {
+  -gameMap : Map*
+  -shop : Shop
+  -towers : vector<Tower*>
+  -enemies : vector<Enemy*>
+  -player : Player
+  -pathHead : PathNode*
+  -currentWave : int
+  -wavePattern : vector<int>
+  +update(mousePos, dt) : void
+  +draw(RenderWindow&) : void
+  +checkShopDrag(coord, clicked) : void
+  +checkTowerClick(mousePos) : void
+  +checkUpgradeClick(mousePos) : void
+  +updateSmartEnemyPaths() : void
+  +startNextWave() : void
+  +isGameOver() : bool
+  +isGameComplete() : bool
+}
+
+Tower "1" *-- "many" Projectile : owns
+Tower "1" *-- "1" UpgradeNode : upgrade root
+
+GameManager *-- Map
+GameManager *-- Shop
+GameManager *-- Player
+GameManager "1" *-- "many" Tower
+GameManager "1" *-- "many" Enemy
+
+Projectile --> Enemy : tracks
+Tower --> Enemy : targets
+Enemy --> PathNode : follows
+PathNode --> Coordinate : uses
+@enduml
+    </pre>
+    <p class="loading">Loading diagram…</p>
+  </div>
+</section>
+
+<!-- ===================================================
+     3. PACKAGE DIAGRAM 1 — Source Modules
+     =================================================== -->
+<section class="section" id="pkg01">
+  <div class="section-header">
+    <span class="badge badge-package">Package</span>
+    <h2>Source Module Packages</h2>
+    <span class="diagram-number">PKG-01</span>
+  </div>
+  <div class="diagram-card">
+    <pre class="plantuml" data-title="PKG-01 Source Module Packages">
+@startuml
+skinparam packageBackgroundColor #1a2030
+skinparam packageBorderColor #3050a0
+skinparam packageFontColor #c0d0ff
+skinparam classFontColor #d0e0ff
+skinparam arrowColor #6080c0
+skinparam classBackgroundColor #202840
+skinparam classBorderColor #304070
+
+package "Game Core" <<Frame>> {
+  class GameManager
+  class Map
+  class Player
+}
+
+package "Enemy Module" <<Frame>> {
+  class Enemy
+  class RedEnemy
+  class BlueEnemy
+  class GreenEnemy
+}
+
+package "Tower Module" <<Frame>> {
+  class Tower
+  class Projectile
+  class UpgradeNode
+  class Shop
+}
+
+package "Pathfinding Module" <<Frame>> {
+  class PathNode
+  class Coordinate
+  class PathCost
+}
+
+"Game Core" ..> "Enemy Module"       : <<uses>>
+"Game Core" ..> "Tower Module"       : <<uses>>
+"Game Core" ..> "Pathfinding Module" : <<uses>>
+"Tower Module"  ..> "Enemy Module"       : <<references>>
+"Enemy Module"  ..> "Pathfinding Module" : <<uses>>
+@enduml
+    </pre>
+    <p class="loading">Loading diagram…</p>
+  </div>
+</section>
+
+<!-- ===================================================
+     4. PACKAGE DIAGRAM 2 — External Dependencies
+     =================================================== -->
+<section class="section" id="pkg02">
+  <div class="section-header">
+    <span class="badge badge-package">Package</span>
+    <h2>External Dependencies</h2>
+    <span class="diagram-number">PKG-02</span>
+  </div>
+  <div class="diagram-card">
+    <pre class="plantuml" data-title="PKG-02 External Dependencies">
+@startuml
+skinparam packageBackgroundColor #1a2030
+skinparam packageBorderColor #3050a0
+skinparam packageFontColor #c0d0ff
+skinparam componentFontColor #d0e0ff
+skinparam arrowColor #6080c0
+skinparam componentBackgroundColor #202840
+skinparam componentBorderColor #304070
+
+package "Tower Defense Application" <<Rectangle>> {
+
+  package "Game Code" <<Frame>> {
+    [GameManager]
+    [Enemy / Subclasses]
+    [Tower]
+    [Map]
+    [Player]
+    [Projectile]
+  }
+}
+
+package "SFML 2.x" <<Database>> {
+  [sfml-graphics]
+  [sfml-window]
+  [sfml-system]
+}
+
+package "C++ Standard Library" <<Database>> {
+  [std::vector]
+  [std::stack]
+  [std::queue]
+  [std::priority_queue]
+  [std::string]
+  [std::cmath]
+}
+
+[GameManager]        --> [sfml-graphics]  : renders via
+[GameManager]        --> [sfml-window]    : events via
+[GameManager]        --> [sfml-system]    : Clock / Time
+[Enemy / Subclasses] --> [std::stack]     : smartPath
+[Enemy / Subclasses] --> [sfml-graphics]  : Sprite / Texture
+[Tower]              --> [std::vector]    : projectiles list
+[Tower]              --> [sfml-graphics]  : draw
+[Map]                --> [std::vector]    : 2-D grid
+[GameManager]        --> [std::vector]    : towers / enemies
+[GameManager]        --> [std::priority_queue] : Dijkstra open-set
+[Projectile]         --> [std::cmath]     : sqrt / distance
+@enduml
+    </pre>
+    <p class="loading">Loading diagram…</p>
+  </div>
+</section>
+
+<!-- ===================================================
+     5. SEQUENCE — Game Startup
+     =================================================== -->
+<section class="section" id="sq01">
+  <div class="section-header">
+    <span class="badge badge-sequence">Sequence</span>
+    <h2>Game Startup</h2>
+    <span class="diagram-number">SQ-01</span>
+  </div>
+  <div class="diagram-card">
+    <pre class="plantuml" data-title="SQ-01 Game Startup">
+@startuml
+skinparam sequenceArrowColor #6080c0
+skinparam sequenceLifeLineBorderColor #3050a0
+skinparam participantBackgroundColor #202840
+skinparam participantBorderColor #3050a0
+skinparam participantFontColor #d0e0ff
+skinparam sequenceGroupBackgroundColor #1a2030
+skinparam sequenceGroupBorderColor #2a3060
+
+participant "main()" as Main
+participant "RenderWindow" as Win
+participant "GameManager" as GM
+participant "Map" as M
+participant "PathNode" as PN
+participant "Player" as P
+participant "Shop" as S
+
+Main -> Win : create(VideoMode(52*GRID+..., 36*GRID))\nsetFramerateLimit(60)
+Main -> GM  : new GameManager()
+activate GM
+GM -> M  : new Map(36, 52)
+activate M
+M --> GM : gameMap ready
+deactivate M
+GM -> PN : new PathNode({41,35})  // start node
+GM -> PN : buildPathNetwork(second, "UP", gameMap)
+note right of PN : Constructs the\nlinked path graph
+GM -> P  : Player() — money=400, health=200
+GM -> S  : Shop()
+deactivate GM
+Main -> Main : enter game loop
+@enduml
+    </pre>
+    <p class="loading">Loading diagram…</p>
+  </div>
+</section>
+
+<!-- ===================================================
+     6. SEQUENCE — Tower Placement
+     =================================================== -->
+<section class="section" id="sq02">
+  <div class="section-header">
+    <span class="badge badge-sequence">Sequence</span>
+    <h2>Tower Placement</h2>
+    <span class="diagram-number">SQ-02</span>
+  </div>
+  <div class="diagram-card">
+    <pre class="plantuml" data-title="SQ-02 Tower Placement">
+@startuml
+skinparam sequenceArrowColor #6080c0
+skinparam sequenceLifeLineBorderColor #3050a0
+skinparam participantBackgroundColor #202840
+skinparam participantBorderColor #3050a0
+skinparam participantFontColor #d0e0ff
+
+actor "Player" as PL
+participant "RenderWindow" as Win
+participant "GameManager" as GM
+participant "Shop" as S
+participant "Map" as M
+participant "Player (obj)" as P
+participant "Tower" as T
+
+PL -> Win        : Mouse press on Shop icon
+Win -> GM        : checkShopDrag(mousePos, true)
+GM -> S          : isDragging = true
+note right of S  : dragTower follows cursor
+PL -> Win        : Mouse release on grid cell
+Win -> GM        : checkShopDrag({0,0}, false)
+GM -> S          : isDragging = false
+GM -> M          : isBuildable(gridX, gridY)?
+M --> GM         : true
+GM -> P          : getMoney() > dragTower.TowerCost?
+P --> GM         : yes
+GM -> P          : decreaseMoney(TowerCost)
+GM -> T          : new Tower(pos)
+T --> GM         : tower added to towers[]
+GM -> GM         : updateSmartEnemyPaths()
+note right of GM : Re-runs Dijkstra for\nall living smart enemies
+@enduml
+    </pre>
+    <p class="loading">Loading diagram…</p>
+  </div>
+</section>
+
+<!-- ===================================================
+     7. SEQUENCE — Wave Spawn
+     =================================================== -->
+<section class="section" id="sq03">
+  <div class="section-header">
+    <span class="badge badge-sequence">Sequence</span>
+    <h2>Wave Spawn</h2>
+    <span class="diagram-number">SQ-03</span>
+  </div>
+  <div class="diagram-card">
+    <pre class="plantuml" data-title="SQ-03 Wave Spawn">
+@startuml
+skinparam sequenceArrowColor #6080c0
+skinparam sequenceLifeLineBorderColor #3050a0
+skinparam participantBackgroundColor #202840
+skinparam participantBorderColor #3050a0
+skinparam participantFontColor #d0e0ff
+
+participant "GameManager" as GM
+participant "wavePattern[]" as WP
+participant "Enemy Factory" as EF
+participant "enemies[]" as EL
+
+GM -> GM : startNextWave()
+activate GM
+GM -> WP : wavePattern.clear() ; fill based on currentWave
+note right of WP : Wave 1 → 7 Red\nWave 2 → 7R+5B\nWave 3 → 7R+5B+5G\nWave 4-5 → 7R+5B+10G
+GM -> GM : maxEnemies = wavePattern.size()\n         enemiesSpawned = 0\n         waveActive = true
+deactivate GM
+
+loop [waveActive && spawnTimer >= spawnDelay && enemiesSpawned < maxEnemies]
+  GM -> WP  : type = wavePattern[enemiesSpawned]
+  alt type == 0
+    GM -> EF : new RedEnemy(pathHead, smart=true)
+  else type == 1
+    GM -> EF : new BlueEnemy(pathHead, smart=true)
+  else type == 2
+    GM -> EF : new GreenEnemy(pathHead, smart=true)
+  end
+  EF --> EL : push_back(enemy)
+  GM -> GM  : updateSmartEnemyPaths()
+  GM -> GM  : enemiesSpawned++
+end
+@enduml
+    </pre>
+    <p class="loading">Loading diagram…</p>
+  </div>
+</section>
+
+<!-- ===================================================
+     8. SEQUENCE — Combat Round
+     =================================================== -->
+<section class="section" id="sq04">
+  <div class="section-header">
+    <span class="badge badge-sequence">Sequence</span>
+    <h2>Combat Round</h2>
+    <span class="diagram-number">SQ-04</span>
+  </div>
+  <div class="diagram-card">
+    <pre class="plantuml" data-title="SQ-04 Combat Round">
+@startuml
+skinparam sequenceArrowColor #6080c0
+skinparam sequenceLifeLineBorderColor #3050a0
+skinparam participantBackgroundColor #202840
+skinparam participantBorderColor #3050a0
+skinparam participantFontColor #d0e0ff
+
+participant "GameManager" as GM
+participant "Tower" as T
+participant "Projectile" as Pr
+participant "Enemy" as E
+participant "Player (obj)" as P
+
+loop [each Tower t in towers[]]
+  GM -> T  : t.update(dt, enemies, player)
+  activate T
+  T -> T   : timer += dt\n[timer >= 1/fireRate?]
+  T -> T   : findTarget(enemies)\n(First / Strongest / Fastest mode)
+  T -> Pr  : new Projectile(pos, target, damage, speed)
+  T --> T  : projectiles.push_back(proj)
+  deactivate T
+  loop [each Projectile p in tower.projectiles[]]
+    GM -> Pr : p.update(dt, player)
+    activate Pr
+    Pr -> Pr : move toward target
+    Pr -> Pr : distance to target < hitRadius?
+    Pr -> E  : takeDamage(damage, player)
+    activate E
+    alt enemy.health <= 0
+      E -> P   : player.increaseMoney(reward)
+      E -> E   : alive = false
+    end
+    deactivate E
+    deactivate Pr
+  end
+end
+@enduml
+    </pre>
+    <p class="loading">Loading diagram…</p>
+  </div>
+</section>
+
+<!-- ===================================================
+     9. SEQUENCE — Enemy Reaches End
+     =================================================== -->
+<section class="section" id="sq05">
+  <div class="section-header">
+    <span class="badge badge-sequence">Sequence</span>
+    <h2>Enemy Reaches End of Path</h2>
+    <span class="diagram-number">SQ-05</span>
+  </div>
+  <div class="diagram-card">
+    <pre class="plantuml" data-title="SQ-05 Enemy Reaches End">
+@startuml
+skinparam sequenceArrowColor #6080c0
+skinparam sequenceLifeLineBorderColor #3050a0
+skinparam participantBackgroundColor #202840
+skinparam participantBorderColor #3050a0
+skinparam participantFontColor #d0e0ff
+
+participant "GameManager" as GM
+participant "Enemy" as E
+participant "reachedEnd[]" as RE
+participant "Player (obj)" as P
+
+GM -> E  : reachedEndOfPath() && isAlive()?
+E --> GM : true
+GM -> RE : reachedEnd.push_back(enemy)
+GM -> GM : enemies.erase(enemy)
+loop [each e in reachedEnd]
+  GM -> P  : player.updateHealth(e)
+  note right of P : health -= e.health\n(or fixed penalty)
+  GM -> E  : delete e
+end
+GM -> P  : player.getHealth() <= 0 ?
+alt yes
+  GM -> GM : isGameover = true
+  note right of GM : stops all further\ngame updates
+end
+@enduml
+    </pre>
+    <p class="loading">Loading diagram…</p>
+  </div>
+</section>
+
+<!-- ===================================================
+     10. SEQUENCE — Game Over / Win
+     =================================================== -->
+<section class="section" id="sq06">
+  <div class="section-header">
+    <span class="badge badge-sequence">Sequence</span>
+    <h2>Game Over / Win</h2>
+    <span class="diagram-number">SQ-06</span>
+  </div>
+  <div class="diagram-card">
+    <pre class="plantuml" data-title="SQ-06 Game Over Win">
+@startuml
+skinparam sequenceArrowColor #6080c0
+skinparam sequenceLifeLineBorderColor #3050a0
+skinparam participantBackgroundColor #202840
+skinparam participantBorderColor #3050a0
+skinparam participantFontColor #d0e0ff
+
+participant "GameManager" as GM
+participant "Player (obj)" as P
+participant "RenderWindow" as Win
+
+alt Game Over path
+  P -> GM  : getHealth() returns 0
+  GM -> GM : isGameover = true
+  GM -> Win : draw dark overlay
+  GM -> Win : draw "GAME OVER!" text (size 120)
+else Win path
+  GM -> GM : isGameComplete()\n  (!waveActive && health > 0\n   && currentWave > 5)
+  GM -> Win : draw dark overlay
+  GM -> Win : draw "YOU WIN!" text (size 120)
+end
+Win -> Win : window.display()
+note over Win : Game loop keeps\nrunning; player\ncan close window
+@enduml
+    </pre>
+    <p class="loading">Loading diagram…</p>
+  </div>
+</section>
+
+<!-- ===================================================
+     11. ACTIVITY — Main Game Loop
+     =================================================== -->
+<section class="section" id="ac01">
+  <div class="section-header">
+    <span class="badge badge-activity">Activity</span>
+    <h2>Main Game Loop</h2>
+    <span class="diagram-number">AC-01</span>
+  </div>
+  <div class="diagram-card">
+    <pre class="plantuml" data-title="AC-01 Main Game Loop">
+@startuml
+skinparam activityBackgroundColor #202840
+skinparam activityBorderColor #3050a0
+skinparam activityFontColor #d0e0ff
+skinparam arrowColor #6080c0
+skinparam noteBackgroundColor #1a2030
+skinparam noteBorderColor #2a3060
+
+start
+:Create RenderWindow;
+:new GameManager();
+while (window.isOpen()?) is (yes)
+  :pollEvent loop;
+  if (Event::Closed?) then (yes)
+    :window.close();
+    stop
+  endif
+  if (MouseButtonPressed?) then (yes)
+    :checkUpgradeClick();
+    :checkModeClick();
+    :checkTowerClick();
+    :checkShopDrag(true);
+  endif
+  if (MouseButtonReleased?) then (yes)
+    :checkShopDrag(false);
+  endif
+  :dt = clock.restart().asSeconds();
+  :game.update(mousePos, dt);
+  :window.clear();
+  :window.draw(panelSprite);
+  :game.draw(window);
+  :window.display();
+endwhile (no)
+stop
+@enduml
+    </pre>
+    <p class="loading">Loading diagram…</p>
+  </div>
+</section>
+
+<!-- ===================================================
+     12. ACTIVITY — Wave & Session Lifecycle
+     =================================================== -->
+<section class="section" id="ac02">
+  <div class="section-header">
+    <span class="badge badge-activity">Activity</span>
+    <h2>Wave &amp; Session Lifecycle</h2>
+    <span class="diagram-number">AC-02</span>
+  </div>
+  <div class="diagram-card">
+    <pre class="plantuml" data-title="AC-02 Wave Session Lifecycle">
+@startuml
+skinparam activityBackgroundColor #202840
+skinparam activityBorderColor #3050a0
+skinparam activityFontColor #d0e0ff
+skinparam arrowColor #6080c0
+
+start
+:startNextWave()\n  build wavePattern[]\n  waveActive = true;
+while (waveActive?) is (yes)
+  if (spawnTimer >= spawnDelay\n&& enemiesSpawned < maxEnemies?) then (yes)
+    :Spawn next enemy\n(Red / Blue / Green);
+    :updateSmartEnemyPaths();
+    :enemiesSpawned++;
+  else (no)
+    :Wait / move enemies\n& update towers;
+  endif
+  if (player.health <= 0?) then (yes)
+    :isGameover = true;
+    stop
+  endif
+  if (enemiesSpawned == maxEnemies\n&& enemies.empty()?) then (yes)
+    :waveActive = false;
+  endif
+endwhile (no)
+if (currentWave > 5?) then (yes)
+  :isGameComplete() → YOU WIN!;
+  stop
+else (no)
+  :wavePauseTimer counts up\n→ startNextWave() again;
+  backward: next wave;
+endif
+stop
+@enduml
+    </pre>
+    <p class="loading">Loading diagram…</p>
+  </div>
+</section>
+
+<!-- ===================================================
+     13. ACTIVITY — Tower Placement & Upgrade
+     =================================================== -->
+<section class="section" id="ac03">
+  <div class="section-header">
+    <span class="badge badge-activity">Activity</span>
+    <h2>Tower Placement &amp; Upgrade Flow</h2>
+    <span class="diagram-number">AC-03</span>
+  </div>
+  <div class="diagram-card">
+    <pre class="plantuml" data-title="AC-03 Tower Placement Upgrade">
+@startuml
+skinparam activityBackgroundColor #202840
+skinparam activityBorderColor #3050a0
+skinparam activityFontColor #d0e0ff
+skinparam arrowColor #6080c0
+
+start
+fork
+  :PLACEMENT FLOW;
+  :Player clicks Shop icon;
+  :isDragging = true;
+  :Drag tower sprite to cell;
+  :Mouse released;
+  if (cell buildable\n&& player.money > cost?) then (yes)
+    :decreaseMoney(TowerCost);
+    :new Tower(pos) → towers[];
+    :updateSmartEnemyPaths();
+  else (no)
+    :Snap back — no placement;
+  endif
+fork again
+  :UPGRADE FLOW;
+  :Player clicks a Tower;
+  :tower.isSelected = true;
+  if (Click "Upgrade" button?) then (yes)
+    :showUpgradeOptions = true;
+    :Display up to 2 child nodes\nof UpgradeNode tree;
+    :Player clicks an upgrade;
+    if (player.money >= upgrade.UpgradeCost?) then (yes)
+      :Apply damage/range/fireRate/speed boost;
+      :decreaseMoney(UpgradeCost);
+      :level++;
+      :updateSprite();
+    else (no)
+      :Not enough money — no upgrade;
+    endif
+  else if (Click "Mode" button?) then (yes)
+    :showModeOptions = true;
+    :Choose: First / Strongest / Fastest;
+    :targetingMode = chosen;
+  endif
+end fork
+stop
+@enduml
+    </pre>
+    <p class="loading">Loading diagram…</p>
+  </div>
+</section>
+
+<!-- ===================================================
+     14. COMPONENT DIAGRAM
+     =================================================== -->
+<section class="section" id="co01">
+  <div class="section-header">
+    <span class="badge badge-component">Component</span>
+    <h2>System Components</h2>
+    <span class="diagram-number">CO-01</span>
+  </div>
+  <div class="diagram-card">
+    <pre class="plantuml" data-title="CO-01 System Components">
+@startuml
+skinparam componentBackgroundColor #202840
+skinparam componentBorderColor #3050a0
+skinparam componentFontColor #d0e0ff
+skinparam interfaceBackgroundColor #1a2030
+skinparam interfaceBorderColor #4060a0
+skinparam arrowColor #6080c0
+skinparam packageBackgroundColor #161628
+skinparam packageBorderColor #2a3050
+
+package "Tower Defense Game" {
+
+  package "Input & Rendering" {
+    [SFML Window\n& Event Loop] as Win
+    [SFML RenderWindow\nDraw System] as Draw
+  }
+
+  package "Game Core" {
+    [GameManager] as GM
+    [Player State] as PS
+    [Wave Controller] as WC
+  }
+
+  package "Map & Pathfinding" {
+    [Map Grid] as MG
+    [PathNode Graph] as PNG
+    [Dijkstra Solver] as DS
+  }
+
+  package "Enemy System" {
+    [Enemy Base + Subclasses\n(Red / Blue / Green)] as EN
+    [Smart Path follower] as SP
+  }
+
+  package "Tower System" {
+    [Tower + UpgradeTree] as TW
+    [Projectile Pool] as PP
+    [Targeting Engine] as TE
+  }
+
+  package "UI" {
+    [Shop] as SH
+    [HUD (Health / Money / Wave)] as HUD
+  }
+}
+
+Win  --> GM  : events
+GM   --> WC  : drives
+GM   --> PS  : updates
+WC   --> EN  : spawns
+EN   --> SP  : navigates via
+SP   --> DS  : queries
+DS   --> PNG : traverses
+PNG  --> MG  : reads
+GM   --> TW  : updates
+TW   --> PP  : fires
+PP   --> EN  : damages
+TW   --> TE  : selects target via
+TE   --> EN  : scans
+GM   --> SH  : handles drag
+GM   --> HUD : renders data
+Draw --> Win : displays
+@enduml
+    </pre>
+    <p class="loading">Loading diagram…</p>
+  </div>
+</section>
+
+<!-- ===================================================
+     15. DEPLOYMENT DIAGRAM
+     =================================================== -->
+<section class="section" id="de01">
+  <div class="section-header">
+    <span class="badge badge-deployment">Deployment</span>
+    <h2>Windows Desktop Deployment</h2>
+    <span class="diagram-number">DE-01</span>
+  </div>
+  <div class="diagram-card">
+    <pre class="plantuml" data-title="DE-01 Windows Desktop Deployment">
+@startuml
+skinparam nodeBackgroundColor #202840
+skinparam nodeBorderColor #3050a0
+skinparam nodeFontColor #d0e0ff
+skinparam artifactBackgroundColor #1a2030
+skinparam artifactBorderColor #2a3060
+skinparam arrowColor #6080c0
+skinparam componentBackgroundColor #161628
+skinparam componentBorderColor #2a3050
+
+node "Developer PC\n(Windows x64)" as PC {
+
+  node "Process: TowerDefense.exe" as Proc {
+    component "main() entry point" as Main
+    component "GameManager" as GM
+    component "SFML Runtime\n(sfml-graphics-2.dll\n sfml-window-2.dll\n sfml-system-2.dll)" as SFML
+    component "C++ Runtime\n(msvcp140.dll)" as CRT
+  }
+
+  artifact "DSProj.sln / .vcxproj" as Proj
+  artifact "main.cpp\nSeniyaKibakwas.cpp" as Src
+  artifact "*.png textures\nARIAL.TTF / Clash_Regular.otf" as Assets
+}
+
+Proj  ..> Src    : compiles
+Src   ..> Proc   : builds into
+Assets ..> GM    : loaded at runtime
+Main  --> GM     : creates & drives
+GM    --> SFML   : renders & handles I/O
+GM    --> CRT    : standard library
+@enduml
+    </pre>
+    <p class="loading">Loading diagram…</p>
+  </div>
+</section>
+
+<!-- ===================================================
+     16. COMMUNICATION — Placement & Pathfinding
+     =================================================== -->
+<section class="section" id="cm01">
+  <div class="section-header">
+    <span class="badge badge-comm">Communication</span>
+    <h2>Placement &amp; Pathfinding</h2>
+    <span class="diagram-number">CM-01</span>
+  </div>
+  <div class="diagram-card">
+    <pre class="plantuml" data-title="CM-01 Placement Pathfinding">
+@startuml
+skinparam sequenceArrowColor #6080c0
+skinparam participantBackgroundColor #202840
+skinparam participantBorderColor #3050a0
+skinparam participantFontColor #d0e0ff
+
+object "GameManager\n:GM" as GM
+object "Shop\n:shop" as S
+object "Map\n:gameMap" as M
+object "Player\n:player" as P
+object "Tower\n:newTower" as T
+object "Enemy\n:smartEnemy" as E
+object "PathCost\n:dijkstra" as D
+
+GM "1: isDragging=true"    --> S
+GM "2: isBuildable(x,y)"   --> M
+M  "3: return true"        --> GM
+GM "4: getMoney()"         --> P
+P  "5: return amount"      --> GM
+GM "6: decreaseMoney(cost)" --> P
+GM "7: new Tower(pos)"     --> T
+GM "8: updateSmartPaths()" --> E
+E  "9: getCurrentNode()"   --> E
+GM "10: dijkstraPath(start, goal, towers)" --> D
+D  "11: return stack<PathNode*>" --> GM
+GM "12: setSmartPath(path)" --> E
+@enduml
+    </pre>
+    <p class="loading">Loading diagram…</p>
+  </div>
+</section>
+
+<!-- ===================================================
+     17. COMMUNICATION — Combat Round
+     =================================================== -->
+<section class="section" id="cm02">
+  <div class="section-header">
+    <span class="badge badge-comm">Communication</span>
+    <h2>Combat Round</h2>
+    <span class="diagram-number">CM-02</span>
+  </div>
+  <div class="diagram-card">
+    <pre class="plantuml" data-title="CM-02 Combat Round">
+@startuml
+skinparam sequenceArrowColor #6080c0
+skinparam participantBackgroundColor #202840
+skinparam participantBorderColor #3050a0
+skinparam participantFontColor #d0e0ff
+
+object "GameManager\n:GM" as GM
+object "Tower\n:t" as T
+object "Projectile\n:proj" as PR
+object "Enemy\n:target" as E
+object "Player\n:player" as P
+
+GM "1: t.update(dt, enemies, player)"  --> T
+T  "2: findTarget(enemies)"            --> T
+T  "3: new Projectile(pos, target, dmg, spd)" --> PR
+T  "4: projectiles.push_back(proj)"   --> T
+PR "5: move toward target (dt)"        --> PR
+PR "6: distance < hitRadius?"          --> PR
+PR "7: target.takeDamage(dmg, player)" --> E
+E  "8: health -= dmg"                  --> E
+E  "9: [health<=0] player.increaseMoney(reward)" --> P
+E  "10: [health<=0] alive = false"     --> E
+PR "11: [hit] alive = false"           --> PR
+GM "12: erase dead projectiles"        --> T
+GM "13: erase dead enemies"            --> GM
+@enduml
+    </pre>
+    <p class="loading">Loading diagram…</p>
+  </div>
+</section>
+
+<footer>Tower Defense Game — DSA Project &nbsp;|&nbsp; UML Diagrams rendered via
+  <a href="https://plantuml.com" style="color:#6080a0">plantuml.com</a>
+</footer>
+
+<!-- ===================================================
+     PlantUML → image encoding script
+     Algorithm:  UTF-8 → DEFLATE (pako) → custom Base64 → plantuml.com URL
+     =================================================== -->
+<script>
+(function () {
+  // PlantUML's custom 6-bit alphabet (different from standard Base64)
+  function encode6bit(b) {
+    if (b < 10) return String.fromCharCode(48 + b);       // '0'..'9'
+    b -= 10;
+    if (b < 26) return String.fromCharCode(65 + b);       // 'A'..'Z'
+    b -= 26;
+    if (b < 26) return String.fromCharCode(97 + b);       // 'a'..'z'
+    b -= 26;
+    if (b === 0) return '-';
+    if (b === 1) return '_';
+    return '?';
+  }
+
+  function append3bytes(b1, b2, b3) {
+    var c1 = b1 >> 2;
+    var c2 = ((b1 & 0x3) << 4) | (b2 >> 4);
+    var c3 = ((b2 & 0xf) << 2) | (b3 >> 6);
+    var c4 = b3 & 0x3f;
+    return encode6bit(c1) + encode6bit(c2) + encode6bit(c3) + encode6bit(c4);
+  }
+
+  function encode64(data) {
+    var r = '';
+    for (var i = 0; i < data.length; i += 3) {
+      if (i + 2 === data.length) {
+        r += append3bytes(data[i], data[i + 1], 0);
+      } else if (i + 1 === data.length) {
+        r += append3bytes(data[i], 0, 0);
+      } else {
+        r += append3bytes(data[i], data[i + 1], data[i + 2]);
+      }
+    }
+    return r;
+  }
+
+  function encodeDiagram(src) {
+    var utf8 = new TextEncoder().encode(src.trim());
+    var compressed = pako.deflateRaw(utf8, { level: 9 });
+    return encode64(compressed);
+  }
+
+  function renderAll() {
+    var pres = document.querySelectorAll('pre.plantuml');
+    pres.forEach(function (pre) {
+      var card  = pre.closest('.diagram-card');
+      var label = card ? card.querySelector('.loading') : null;
+      var src   = pre.textContent.trim();
+      var title = pre.dataset.title || 'PlantUML Diagram';
+
+      try {
+        var encoded = encodeDiagram(src);
+        var url = 'https://www.plantuml.com/plantuml/png/' + encoded;
+
+        var img = document.createElement('img');
+        img.alt = title;
+        img.style.maxWidth = '100%';
+
+        img.onload = function () {
+          if (label) label.remove();
+        };
+        img.onerror = function () {
+          if (label) {
+            label.className = 'error';
+            label.textContent = '⚠ Could not load diagram — check internet connection or PlantUML server.';
+          }
+        };
+
+        img.src = url;
+
+        if (card) {
+          card.insertBefore(img, pre);
+        }
+      } catch (e) {
+        if (label) {
+          label.className = 'error';
+          label.textContent = '⚠ Encoding error: ' + e.message;
+        }
+      }
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', renderAll);
+  } else {
+    renderAll();
+  }
+})();
+</script>
+
+</body>
+</html>
